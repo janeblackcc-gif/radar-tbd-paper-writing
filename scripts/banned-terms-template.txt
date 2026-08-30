@@ -1,0 +1,105 @@
+# 禁用词模式模板 —— 供 scripts/jargon_scan.py 使用
+#
+# 一行一个正则；空行与 # 开头的行忽略；默认不区分大小写。
+# 用法：
+#   python jargon_scan.py --patterns banned-terms-template.txt \
+#          --tex sections_zh --exclude-env algorithmic --pdf dist/final.pdf
+#
+# ┌─ 三节的口径不同，动手前先看清楚 ────────────────────────────────┐
+# │ A 通用英文流程/实现方言 —— 可直接沿用                            │
+# │ B 项目专属标识         —— 示例，新项目必须整节替换               │
+# │ C 中文内部造词         —— 示例，新项目必须整节替换               │
+# └──────────────────────────────────────────────────────────────┘
+#
+# 判据（三节共用）：这个词在本领域已发表文献里查不到、是本次工作流程中
+# 造出来的，就进表。见 references/03-diction.md 第二节与第十节。
+#
+# 验收口径不是「退出码必须为 0」，而是「命中数 = 已人工判定豁免数，
+# 每条豁免在交付说明里列出理由」。中文稿的英文伪代码体必然产生命中。
+
+
+# ══ A. 通用英文流程/实现方言（可直接沿用）═════════════════════════
+# 描述你的工作方式而非科学动作的词。中文稿里出现即为英文残留。
+
+manifest
+governance
+governed
+artifact
+sealed roots?
+truth provenance
+host[- ]provenance
+official truth
+official generator
+claim[- ]narrowing
+claim scope
+fail[ -]closed
+payload
+\bcase\b
+\btrial\b
+\bseed\b
+shared seed
+\bCSV\b
+\bJSON\b
+hashes
+worker
+diagnostics
+deadline
+\bruntime\b
+caps
+fallback
+ownership
+sanity check
+research implementation
+
+
+# ══ B. 项目专属标识（示例——新项目必须整节替换）═══════════════════
+# 内部配置键、路线名、文件名、分支名。这一节的每一条都只对本项目有效。
+
+fcm-rigid-fixed-slot-cv-v1
+internal_fixed_slot_tracks
+planned_trials\.csv
+source[- ]root
+detection flags
+exact route
+structured exact route
+certified frontier route
+formal core
+operating.point
+lag-3
+marked edge
+bundled formation module only
+
+
+# ══ C. 中文内部造词（示例——新项目必须整节替换）═══════════════════
+# 只激活「带上下文的复合形态」。单字通用词（口径/清单/注册/冻结/合同/
+# 留出/审计）不在此激活——它们在正常中文里有合法用法，无条件 grep 会
+# 产生大量误命中，反而让清零门形同虚设。那些词见文末的人工复核候选。
+
+统计口径
+评价协议
+执行窗口
+数据指纹
+证据链
+成功回放
+三臂消融
+核心网格
+覆盖零
+可认证前沿搜索
+确定性刚体匀速真值协议
+主成功判据
+共享随机种子
+形成自洽表述
+
+
+# ══ 人工复核候选（不激活，通读时按语境判断）═══════════════════════
+# 这些词在中文里有合法用法，不能机械清零；但一旦以「流程治理」义出现，
+# 就要按 references/03-diction.md 的正名表替换。
+#
+#   口径  清单  注册  冻结  封存  合同  留出  审计  作废  揭盲
+#   提交号  哈希  战役  工单号  单元  产物
+#
+# 自查法：把句中的词替换成它对应的科学事实（「执行 N 次」→「进行 N 次
+# Monte Carlo 仿真」）。替换不出科学事实的句子通常整句可删。
+#
+# ══ 中文 AI 腔高频词（按密度清洗，不是一刀切）═════════════════════
+#   值得注意的是  需要指出的是  不难看出  显著提升  大幅改善  充分验证
