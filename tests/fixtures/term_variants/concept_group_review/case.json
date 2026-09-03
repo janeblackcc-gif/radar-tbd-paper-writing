@@ -1,0 +1,16 @@
+{
+ "kind": "manual_review",
+ "gate": "term_variants",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--no-pdf"
+ ],
+ "expect_exit": 4,
+ "expect_contains": [
+  "非规范形态「率切片」：源码 2 处"
+ ],
+ "expect_not_contains": [
+  "非规范形态「率假设」"
+ ]
+}

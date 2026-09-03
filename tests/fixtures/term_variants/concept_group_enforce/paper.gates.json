@@ -1,0 +1,17 @@
+{
+ "sections": [
+  "sections"
+ ],
+ "outline": "outline.md",
+ "main": "main.tex",
+ "roles": {
+  "05_results": "results",
+  "06_conclusion": "conclusion"
+ },
+ "glossary": "glossary.md",
+ "concept_groups": {
+  "转弯率假设": [
+   "率切片"
+  ]
+ }
+}

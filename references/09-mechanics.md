@@ -81,6 +81,8 @@ WP1 词汇 → WP2 结构 → WP3 图表 → WP4 参考文献
 
 **「数据核对后无需改动」的项也照样登记**，并给出核对结果。本项目 r11 轮 13 条里有 3 条是这种（如 #6：「新 CI：+0.33 pp [−0.22, +0.89]⋯原句与新数据方向一致」）。
 
+机器版是候选账本 `edits/units.jsonl`（12-edit-contract §四）：三列的信息全在字段里，`scripts/change_ledger.py` 核对两版之间每个改动段落都有 `accept|manual` 条目，「核对后无需改动」对应 `decision: reject`（该段随后若仍变了，脚本记待审）。没有 git 基线的场合手工对照单照旧。
+
 ## 五、PLAN_DISCREPANCY：范围外问题登记不动手
 
 发现但超出本轮授权范围的问题：**只登记，不顺手改。**
@@ -119,7 +121,14 @@ whole-document delta : +163
 
 残差非零说明有未登记的改动。
 
-配套脚本：`scripts/page_delta.py`。
+页级 delta 抓不住等长改写。段落级版本：
+
+```bash
+python scripts/change_ledger.py --config paper.gates.json --base-rev <上一冻结版>   # 未归因段落数必须为 0
+python scripts/semantic_diff.py  --config paper.gates.json --old-rev  <上一冻结版>   # 数字/单位/引用/宏/图表号逐段一致
+```
+
+配套脚本：`scripts/page_delta.py`（页级）、`scripts/change_ledger.py`（段落级归因）、`scripts/semantic_diff.py`（段落级语义不变量）。
 
 ## 七、删减去向清单
 

@@ -1,7 +1,12 @@
 {
   "_comment": "门禁注册表。run_gates.py 读取；每条 gate 的 args 里的 {name} 从项目配置 paper.gates.json 取值。requires 里的键缺失时该门 SKIPPED（硬门被跳过则整体不得判 FROZEN_OK）。severity=hard 不可补偿；severity=soft 只产生热区，永不失败。阈值只放这里，不写进脚本默认值以外的地方。",
-  "version": 1,
-  "exit_semantics": {"0": "PASS", "1": "HARD_FAIL", "2": "ERROR", "4": "REVIEW_REQUIRED"},
+  "version": 2,
+  "exit_semantics": {
+    "0": "PASS",
+    "1": "HARD_FAIL",
+    "2": "ERROR",
+    "4": "REVIEW_REQUIRED"
+  },
   "verdicts": {
     "BLOCKED": "契约门失败或工具错误：禁止改稿，先修契约/环境",
     "TARGETED": "硬门失败：按 unit 清单与 reason_code 定点修，每 unit 一张卡片、同维度 ≤2 次",
@@ -15,8 +20,14 @@
       "severity": "hard",
       "on_fail": "BLOCKED",
       "script": "macro_diff.py",
-      "args": ["{macro_base}", "{macro_new}"],
-      "requires": ["macro_base", "macro_new"],
+      "args": [
+        "{macro_base}",
+        "{macro_new}"
+      ],
+      "requires": [
+        "macro_base",
+        "macro_new"
+      ],
       "doc": "references/06-evidence.md §一",
       "why": "既有宏一个都不能变；改了就是数据漂移，任何文字改动都建立在错的数字上"
     },
@@ -26,10 +37,54 @@
       "severity": "hard",
       "on_fail": "BLOCKED",
       "script": "page_delta.py",
-      "args": ["{pdf_base}", "{pdf}", "--strip-ws"],
-      "requires": ["pdf_base", "pdf"],
+      "args": [
+        "{pdf_base}",
+        "{pdf}",
+        "--strip-ws"
+      ],
+      "requires": [
+        "pdf_base",
+        "pdf"
+      ],
       "doc": "references/09-mechanics.md §六",
       "why": "残差非零即存在未申报改动；归因项通过 attributions 键传入"
+    },
+    {
+      "id": "change_ledger",
+      "layer": 0,
+      "severity": "hard",
+      "on_fail": "BLOCKED",
+      "script": "change_ledger.py",
+      "args": [
+        "--config",
+        "{config}",
+        "--base-rev",
+        "{base_rev}"
+      ],
+      "requires": [
+        "base_rev"
+      ],
+      "doc": "references/12-edit-contract.md §四；references/09-mechanics.md §六",
+      "why": "两版之间每个改动段落都要在账本里有 accept|manual 记录；等长改写页级 delta 抓不到，这里抓得到"
+    },
+    {
+      "id": "semantic_diff",
+      "layer": 0,
+      "severity": "hard",
+      "on_fail": "TARGETED",
+      "script": "semantic_diff.py",
+      "args": [
+        "--config",
+        "{config}",
+        "--old-rev",
+        "{base_rev}",
+        "--quiet-pass"
+      ],
+      "requires": [
+        "base_rev"
+      ],
+      "doc": "references/12-edit-contract.md §一",
+      "why": "数值/单位/引用/宏/图表号在段落级必须一致；方向词、范围限定、否定计数只提示。结构轮之后才作硬门"
     },
     {
       "id": "claim_ledger",
@@ -37,8 +92,13 @@
       "severity": "hard",
       "on_fail": "TARGETED",
       "script": "claim_ledger.py",
-      "args": ["--config", "{config}"],
-      "requires": ["outline"],
+      "args": [
+        "--config",
+        "{config}"
+      ],
+      "requires": [
+        "outline"
+      ],
       "doc": "references/01-skeleton.md §一.4；references/02-narrative.md 摘要硬规则",
       "why": "主张必须挂证据与边界；结果章做了外部基线比较而摘要不提，是本方法记录到的最贵事故"
     },
@@ -48,10 +108,31 @@
       "severity": "hard",
       "on_fail": "TARGETED",
       "script": "hedge_budget.py",
-      "args": ["--config", "{config}", "--per20", "10", "--lcs", "12"],
+      "args": [
+        "--config",
+        "{config}",
+        "--per20",
+        "10",
+        "--lcs",
+        "12"
+      ],
       "requires": [],
       "doc": "references/04-hedging.md §二",
       "why": "上限防堆砌、位置防扩散、下限防删光——成对规则的机器版"
+    },
+    {
+      "id": "term_variants",
+      "layer": 3,
+      "severity": "hard",
+      "on_fail": "TARGETED",
+      "script": "term_variants.py",
+      "args": [
+        "--config",
+        "{config}"
+      ],
+      "requires": [],
+      "doc": "references/03-diction.md §四/§六",
+      "why": "术语表第四列的避免用法出现即失败；concept_groups 声明的非规范形态记待审（--enforce 后为硬）；无术语表只提醒"
     },
     {
       "id": "jargon_scan",
@@ -59,8 +140,20 @@
       "severity": "hard",
       "on_fail": "TARGETED",
       "script": "jargon_scan.py",
-      "args": ["--patterns", "{banned_terms}", "--tex", "{sections}", "--exclude-env", "algorithmic", "--pdf", "{pdf}"],
-      "requires": ["banned_terms", "pdf"],
+      "args": [
+        "--patterns",
+        "{banned_terms}",
+        "--tex",
+        "{sections}",
+        "--exclude-env",
+        "algorithmic",
+        "--pdf",
+        "{pdf}"
+      ],
+      "requires": [
+        "banned_terms",
+        "pdf"
+      ],
       "exemption_rule": "命中数 = 已人工判定豁免数，每条豁免在报告里列理由；退出码 1 不自动等于失败",
       "doc": "references/03-diction.md §八",
       "why": "图内标签由绘图脚本继承变量名，源码 grep 不到"
@@ -71,8 +164,17 @@
       "severity": "hard",
       "on_fail": "TARGETED",
       "script": "page_fill.py",
-      "args": ["--pdf", "{pdf}", "--threshold", "0.35", "--exemptions", "{exemptions}"],
-      "requires": ["pdf"],
+      "args": [
+        "--pdf",
+        "{pdf}",
+        "--threshold",
+        "0.35",
+        "--exemptions",
+        "{exemptions}"
+      ],
+      "requires": [
+        "pdf"
+      ],
       "doc": "references/09-mechanics.md §十",
       "why": "\\FloatBarrier / 浮动体推挤造成的半空页只在页级可见"
     }

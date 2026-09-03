@@ -1,0 +1,12 @@
+{
+ "sections": [
+  "sections"
+ ],
+ "outline": "outline.md",
+ "main": "main.tex",
+ "roles": {
+  "05_results": "results",
+  "06_conclusion": "conclusion"
+ },
+ "glossary": "glossary.md"
+}

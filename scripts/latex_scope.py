@@ -319,6 +319,101 @@ def split_units(path: Path, role: str) -> list[Unit]:
 
 
 # ----------------------------------------------------------------------------
+# 两版之间的段落配对（semantic_diff / change_ledger 共用）
+# ----------------------------------------------------------------------------
+
+def _norm_ws(s: str) -> str:
+    return re.sub(r"\s+", " ", s.strip())
+
+
+def pair_units(old: list[Unit], new: list[Unit], threshold: float = 0.45):
+    """按文件分组，用 difflib 相似度做贪心一对一配对。
+    返回 (pairs, added, removed)：pairs = [(old_unit, new_unit, ratio)]。
+    段落被改写得面目全非（ratio < threshold）时视为「删 + 增」，由调用方转人工。"""
+    import difflib
+    pairs, added, removed = [], [], []
+    by_file_old: dict[str, list[Unit]] = {}
+    by_file_new: dict[str, list[Unit]] = {}
+    for u in old:
+        by_file_old.setdefault(u.file, []).append(u)
+    for u in new:
+        by_file_new.setdefault(u.file, []).append(u)
+    for f in sorted(set(by_file_old) | set(by_file_new)):
+        ol, nl = by_file_old.get(f, []), by_file_new.get(f, [])
+        # 1) 内容哈希相同直接配对
+        used_o, used_n = set(), set()
+        h_old = {}
+        for i, u in enumerate(ol):
+            h_old.setdefault(content_hash(u.raw), []).append(i)
+        for j, v in enumerate(nl):
+            cands = h_old.get(content_hash(v.raw), [])
+            for i in cands:
+                if i not in used_o:
+                    pairs.append((ol[i], v, 1.0)); used_o.add(i); used_n.add(j); break
+        # 2) 其余按相似度贪心
+        scored = []
+        for i, u in enumerate(ol):
+            if i in used_o:
+                continue
+            for j, v in enumerate(nl):
+                if j in used_n:
+                    continue
+                r = difflib.SequenceMatcher(None, _norm_ws(u.prose), _norm_ws(v.prose)).ratio()
+                if r >= threshold:
+                    scored.append((r, i, j))
+        for r, i, j in sorted(scored, reverse=True):
+            if i in used_o or j in used_n:
+                continue
+            pairs.append((ol[i], nl[j], r)); used_o.add(i); used_n.add(j)
+        removed.extend(u for i, u in enumerate(ol) if i not in used_o)
+        added.extend(v for j, v in enumerate(nl) if j not in used_n)
+    return pairs, added, removed
+
+
+def git_root(path: Path) -> Path | None:
+    r = subprocess.run(["git", "-C", str(path if path.is_dir() else path.parent), "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True, errors="replace")
+    if r.returncode != 0:
+        return None
+    return Path(r.stdout.strip())
+
+
+def git_show(root: Path, rev: str, file: Path) -> str | None:
+    rel = file.resolve().relative_to(root.resolve()).as_posix()
+    r = subprocess.run(["git", "-C", str(root), "show", f"{rev}:{rel}"], capture_output=True)
+    if r.returncode != 0:
+        return None
+    return r.stdout.decode("utf-8", errors="replace")
+
+
+def units_from_git(files: list[Path], rev: str, roles: dict[str, str] | None = None) -> list[Unit] | None:
+    """把 sections 文件在指定 git 版本的内容切成单元；文件在该版本不存在则跳过。
+    仓库不存在返回 None。"""
+    if not files:
+        return []
+    root = git_root(files[0])
+    if root is None:
+        return None
+    out: list[Unit] = []
+    for f in files:
+        txt = git_show(root, rev, f)
+        if txt is None:
+            continue
+        with tempfile.NamedTemporaryFile("w", suffix=f.suffix, delete=False, encoding="utf-8") as tf:
+            tf.write(txt)
+            tmp = Path(tf.name)
+        try:
+            us = split_units(tmp, guess_role(f, roles))
+            for u in us:
+                u.file = f.name
+                u.unit_id = f"{f.stem}#{u.ordinal}@{u.unit_id.split('@')[1]}"
+            out.extend(us)
+        finally:
+            tmp.unlink(missing_ok=True)
+    return out
+
+
+# ----------------------------------------------------------------------------
 # 项目配置
 # ----------------------------------------------------------------------------
 

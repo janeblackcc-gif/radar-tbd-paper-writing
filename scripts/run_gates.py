@@ -106,6 +106,9 @@ def main() -> int:
             values[key] = v
     if "macro_new" not in values and cfg.get("macros"):
         values["macro_new"] = abspath(cfg["macros"])
+    for k, v in cfg.items():                      # 其余标量键（如 base_rev）原样可用
+        if isinstance(v, str) and k not in values:
+            values[k] = v
     if "exemptions" not in values:
         values["exemptions"] = str(root / "paper.exemptions.json")  # 允许不存在
 
@@ -137,6 +140,10 @@ def main() -> int:
         status = semantics.get(r.returncode, f"EXIT{r.returncode}")
         if gid == "jargon_scan" and r.returncode == 1:
             status = "REVIEW_REQUIRED"   # 命中数需与人工豁免数比对，脚本本身不能判失败
+        if g["severity"] == "soft" and r.returncode == 1:
+            status = "REVIEW_REQUIRED"   # 软门按定义不得失败；退出 1 视为待审并在报告里标注
+            notes_soft = f"软门 {gid} 返回了退出码 1——软门不得判失败，已降为待审；请检查脚本"
+            results.append({"id": gid + "(note)", "status": "NOTE", "reason": notes_soft, "severity": "soft"})
         results.append({"id": gid, "status": status, "exit": r.returncode, "severity": g["severity"],
                         "on_fail": g.get("on_fail", "TARGETED"), "cmd": " ".join(cmd),
                         "proof": proof_block(r.stdout), "stdout": r.stdout, "stderr": r.stderr.strip()})

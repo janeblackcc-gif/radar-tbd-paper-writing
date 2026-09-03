@@ -188,6 +188,10 @@ SNR  RMSE  GOSPA  OSPA  CFAR  P_D  P_fa  TBD  ML-PDA  GM-PHD
    - 数字风格统一
    - 交叉引用完整性
 5. 重编译后**中英逐段反向核对**、缩写首次定义检查、图注独立可读性检查
+6. **翻译不变量机器核对**：把中英段落写成 `pairs.json`（`[{"id": "05#12", "old": "中文段", "new": "English paragraph"}]`），跑
+   `python scripts/semantic_diff.py --pairs pairs.json --mode ze`。数字、单位、引用键、图表号逐段必须一致（HARD_FAIL）；
+   方向词（高于/低于、包含零/不包含零、至少/至多、已知/未知、支持/未显示、平均/逐场景）跨语言只作待审；
+   缩写差异在 `ze` 模式只提示，因为英文稿会在首现处展开缩写。人工反向核对（第 5 步）仍然要做——脚本只查事实，不查语气与逻辑。
 
 ### 英文侧的对应雷区
 

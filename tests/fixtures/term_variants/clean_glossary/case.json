@@ -1,0 +1,13 @@
+{
+ "kind": "must_preserve",
+ "gate": "term_variants",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--no-pdf"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "判定：PASS"
+ ]
+}

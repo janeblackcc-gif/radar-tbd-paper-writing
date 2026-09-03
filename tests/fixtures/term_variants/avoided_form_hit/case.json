@@ -1,0 +1,13 @@
+{
+ "kind": "must_change",
+ "gate": "term_variants",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--no-pdf"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "避免用法「thresholded detection」"
+ ]
+}

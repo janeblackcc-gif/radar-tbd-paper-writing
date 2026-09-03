@@ -1,0 +1,14 @@
+{
+ "kind": "must_preserve",
+ "gate": "semantic_diff",
+ "args": [
+  "--pairs",
+  "{dir}/pairs.json",
+  "--mode",
+  "ze"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "判定：PASS"
+ ]
+}

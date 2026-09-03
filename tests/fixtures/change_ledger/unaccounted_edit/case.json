@@ -1,0 +1,19 @@
+{
+ "kind": "must_change",
+ "gate": "change_ledger",
+ "git_case": {
+  "base": "base",
+  "new": "new"
+ },
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--base-rev",
+  "HEAD"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "未归因 1",
+  "05_results#2"
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "kind": "manual_review",
+ "gate": "semantic_diff",
+ "args": [
+  "--old",
+  "{dir}/old",
+  "--new",
+  "{dir}/new"
+ ],
+ "expect_exit": 4,
+ "expect_contains": [
+  "方向翻转：ci_excl0 → ci_incl0"
+ ],
+ "expect_not_contains": [
+  "HARD_FAIL"
+ ]
+}

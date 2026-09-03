@@ -1,0 +1,14 @@
+{
+ "kind": "must_preserve",
+ "gate": "semantic_diff",
+ "args": [
+  "--old",
+  "{dir}/old",
+  "--new",
+  "{dir}/new"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "判定：PASS"
+ ]
+}

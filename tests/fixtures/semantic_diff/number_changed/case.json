@@ -1,0 +1,14 @@
+{
+ "kind": "must_change",
+ "gate": "semantic_diff",
+ "args": [
+  "--old",
+  "{dir}/old",
+  "--new",
+  "{dir}/new"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "数值变化：-{'61.92': 1} +{'62.19': 1}"
+ ]
+}

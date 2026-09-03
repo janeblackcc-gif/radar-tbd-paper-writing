@@ -1,0 +1,17 @@
+{
+ "kind": "manual_review",
+ "gate": "semantic_diff",
+ "args": [
+  "--old",
+  "{dir}/old",
+  "--new",
+  "{dir}/new"
+ ],
+ "expect_exit": 4,
+ "expect_contains": [
+  "在同文件段落间移动"
+ ],
+ "expect_not_contains": [
+  "HARD_FAIL"
+ ]
+}

@@ -1,6 +1,6 @@
 # 卡片 · 终稿措辞（术语与指代）
 
-**触发**：`jargon_hit`（jargon_scan）；`term_variant`、`avoided_form`（term_variants，M2）；`unclear_reference` / `synonym_drift`（style_audit，M3）。
+**触发**：`jargon_hit`（jargon_scan）；`term_variant`、`avoided_form`（term_variants）；`orphan_acronym` / `term_first_use_no_cue`（style_audit 文档级指标）。
 
 ## 允许改
 - 按正名表把黑话换成期刊词；按术语表第四列把「避免用法」换回冻结词。

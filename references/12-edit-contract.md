@@ -1,6 +1,6 @@
 # 12 · 编辑契约：改之前先定「什么绝对不能变」
 
-> 适用语言：通用。配套：`gates/gates.json` 第 0 层、`scripts/change_ledger.py`（M2）、`scripts/semantic_diff.py`（M2）
+> 适用语言：通用。配套：`gates/gates.json` 第 0 层、`scripts/change_ledger.py`、`scripts/semantic_diff.py`
 
 改稿的每一轮都在三条契约之下进行。三条全部就绪，agent 才允许生成候选修改；任何一条失效，判定为 BLOCKED（见 [14-routing-and-stop.md](14-routing-and-stop.md)）。
 
@@ -19,7 +19,7 @@
 | 术语表四列（[03-diction.md](03-diction.md) §四） | 冻结词、外文、语境、避免用法 |
 | 配置参数表 | 手写的配置常数（门限、步长、上限） |
 
-改写过程中必须逐项保持的语义不变量（M2 的 `semantic_diff.py` 机器核对）：
+改写过程中必须逐项保持的语义不变量（`semantic_diff.py` 机器核对）：
 
 **必须完全一致**：所有数值与正负号、单位、公式块、引用键、`\label/\ref/\eqref`、图表编号、列表编号、缩写、方法名、参数符号、样本量、置信区间端点。
 
@@ -69,7 +69,7 @@ trigger  : FROZEN_OK 之后继续改的事件（导师意见 / 新事实）
 
 ## 四、候选账本：模型输出只是候选，不直接成为正文
 
-每个改动单元记一行到 `edits/units.jsonl`（M2 的 `change_ledger.py` 核对；在此之前按此格式手记即可）：
+每个改动单元记一行到 `edits/units.jsonl`（默认位置：稿件目录下；`change_ledger.py` 核对）：
 
 ```json
 {"unit_id": "05_experiments_results#12@af95d455",
@@ -92,6 +92,15 @@ trigger  : FROZEN_OK 之后继续改的事件（导师意见 / 新事实）
 - 两版之间 `git diff` 里每个变了的 unit 必须能在账本里找到 `accept|manual` 条目，否则 `change_ledger` 判 HARD_FAIL——这是 09-mechanics §六「逐页 delta 残差必须为 0」的段落级版本，且抓得住等长改写。
 
 它替代的是三列对照单（09-mechanics §四）的手工形式，三列的信息（原文 → 新文 → 依据）全在字段里。
+
+核对命令（`base_rev` 写在配置里时 `run_gates.py` 会自动跑这两门）：
+
+```bash
+python scripts/change_ledger.py --config paper.gates.json --base-rev <上一冻结版提交号>
+python scripts/semantic_diff.py  --config paper.gates.json --old-rev  <上一冻结版提交号>
+```
+
+两门的分工：`change_ledger` 回答「每处改动有没有人负责」，`semantic_diff` 回答「负责的人有没有把事实改坏」。结构轮之间跑 `semantic_diff` 必然大片硬失败——段落拆并、手抄数字入宏、加引用都是它要拦的事——所以它是词汇轮与自然度轮的门，结构轮只用 `change_ledger` 归因，语义核对靠闭环表复述。段落在同一文件内移动的数字/引用只记待审（「在同文件段落间移动」），文件级也丢了才是硬失败。
 
 三个它能防住的事故：模型为了改一处重复顺便重写整段；第二轮把第一轮改好的句子再换一遍同义词；后续发现问题时不知道是哪一轮引入的。
 

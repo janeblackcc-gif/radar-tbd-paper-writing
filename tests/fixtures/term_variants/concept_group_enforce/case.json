@@ -1,0 +1,14 @@
+{
+ "kind": "must_change",
+ "gate": "term_variants",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--no-pdf",
+  "--enforce"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "非规范形态「率切片」"
+ ]
+}
