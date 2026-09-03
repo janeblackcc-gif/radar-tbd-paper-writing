@@ -1,0 +1,21 @@
+{
+ "kind": "manual_review",
+ "gate": "style_audit",
+ "args": [
+  "--tex",
+  "{dir}/sections",
+  "--top",
+  "5"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "template_phrase",
+  "generic_closing",
+  "figure_first_opening",
+  "connector_density",
+  "判定：PASS"
+ ],
+ "expect_not_contains": [
+  "HARD_FAIL"
+ ]
+}

@@ -177,6 +177,24 @@
       ],
       "doc": "references/09-mechanics.md §十",
       "why": "\\FloatBarrier / 浮动体推挤造成的半空页只在页级可见"
+    },
+    {
+      "id": "style_audit",
+      "layer": 4,
+      "severity": "soft",
+      "on_fail": "REVIEW",
+      "script": "style_audit.py",
+      "args": [
+        "--config",
+        "{config}",
+        "--top",
+        "10",
+        "--review-at",
+        "3"
+      ],
+      "requires": [],
+      "doc": "references/13-style-audit.md；references/11-naturalness.md",
+      "why": "只出热区，永不退出 1；高优先级热区（≥3 信号）达到 3 段才判 REVIEW；软不覆盖硬"
     }
   ]
 }

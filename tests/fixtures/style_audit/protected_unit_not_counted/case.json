@@ -1,0 +1,15 @@
+{
+ "kind": "must_preserve",
+ "gate": "style_audit",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--review-at",
+  "1"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "保护段，不改",
+  "高优先级 0"
+ ]
+}

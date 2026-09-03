@@ -1,13 +1,13 @@
 # 卡片 · 结果章
 
-**触发**：`page_blank`（page_fill）；`hedge_over_budget` / `hedge_position` 落在结果章；`result_first`（style_audit，M3）。
+**触发**：`page_blank`（page_fill）；`hedge_over_budget` / `hedge_position` 落在结果章；`figure_first_opening` / `claim_far_from_evidence`（style_audit，卡片 `result-first-repair`）。
 
 ## 浮动体（page_blank）
 允许：删 `\FloatBarrier`；`[t]`/`[tb]` 替代 `[H]`/`[p]`；把 `figure*` 移到引用段之前的位置；拆超页浮动体。
 禁止：改正文文字、图注文字、图内容。
 自检：`page_fill` 超阈页为空；页数回到基线；`page_delta` 残差为 0（文字未动）。
 
-## 段首（result_first）
+## 段首（figure_first_opening）
 段首先说观察或比较结论，再指图表。「图 X 给出……」不得作为没有结论的起句。
 允许：把段内已有的结论句移到段首。
 禁止：新造结论；改数字、方向、区间。

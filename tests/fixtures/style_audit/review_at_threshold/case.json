@@ -1,0 +1,17 @@
+{
+ "kind": "manual_review",
+ "gate": "style_audit",
+ "args": [
+  "--tex",
+  "{dir}/sections",
+  "--review-at",
+  "1"
+ ],
+ "expect_exit": 4,
+ "expect_contains": [
+  "REVIEW_REQUIRED"
+ ],
+ "expect_not_contains": [
+  "HARD_FAIL"
+ ]
+}
