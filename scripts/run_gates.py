@@ -10,10 +10,14 @@
 
 用法:
     python run_gates.py --config paper.gates.json [--registry gates/gates.json]
+                        [--stage skeleton|chapter|freeze]   # 写稿阶段档案（注册表 stages 键）
                         [--only id ...] [--skip id ...] [--report gate_report.md] [--json gate_report.json]
                         [--allow-skip]     # 允许硬门因缺输入被跳过时仍可判 FROZEN_OK（默认不允许）
 
-退出码: 0 = FROZEN_OK, 1 = TARGETED/REVIEW, 3 = BLOCKED, 2 = 用法/环境错误
+写稿阶段（--stage skeleton / chapter）：只跑该阶段的门，缺输入的门跳过不降级，全过判 STAGE_OK（退出 0）；
+STAGE_OK 不是冻结——冻结只能由 --stage freeze（或不带 --stage）的 FROZEN_OK 给出。
+
+退出码: 0 = FROZEN_OK / STAGE_OK, 1 = TARGETED/REVIEW, 3 = BLOCKED, 2 = 用法/环境错误
 """
 
 from __future__ import annotations
@@ -78,6 +82,7 @@ def main() -> int:
     ap.add_argument("--report", type=Path, help="写 Markdown 报告")
     ap.add_argument("--json", type=Path, help="写 JSON 结果")
     ap.add_argument("--allow-skip", action="store_true")
+    ap.add_argument("--stage", help="阶段档案（注册表 stages 键）：skeleton | chapter | freeze；不给 = freeze 语义、跑全部门")
     args = ap.parse_args()
 
     if not args.config.is_file():
@@ -113,16 +118,31 @@ def main() -> int:
         values["exemptions"] = str(root / "paper.exemptions.json")  # 允许不存在
 
     semantics = {int(k): v for k, v in reg["exit_semantics"].items()}
+    stage = None
+    if args.stage:
+        stages = reg.get("stages", {})
+        if args.stage not in stages:
+            print(f"ERROR: 注册表没有阶段 {args.stage!r}；可选 {sorted(stages)}", file=sys.stderr)
+            return 2
+        stage = stages[args.stage]
+    stage_gates = None if not stage or stage.get("gates") == "all" else set(stage.get("gates", []))
     results = []
     for g in reg["gates"]:
         gid = g["id"]
         if args.only and gid not in args.only:
             continue
+        if stage_gates is not None and gid not in stage_gates:
+            continue
         if gid in args.skip:
             results.append({"id": gid, "status": "SKIPPED", "reason": "--skip", "severity": g["severity"]})
             continue
-        gargs, missing = resolve_args(g["args"], values)
-        need = [k for k in g.get("requires", []) if k not in values] + missing
+        template, requires = g["args"], g.get("requires", [])
+        if stage and gid in stage.get("args", {}):      # 阶段覆盖参数模板：缺输入只看占位符
+            template, requires = stage["args"][gid], []
+        gargs, missing = resolve_args(template, values)
+        if stage:
+            gargs += stage.get("extra_args", {}).get(gid, [])
+        need = [k for k in requires if k not in values] + missing
         if need:
             results.append({"id": gid, "status": "SKIPPED", "reason": f"缺输入 {sorted(set(need))}",
                             "severity": g["severity"]})
@@ -160,10 +180,16 @@ def main() -> int:
     elif any(x["status"] == "REVIEW_REQUIRED" for x in results):
         verdict = "REVIEW"
     hard_skipped = [x["id"] for x in results if x["status"] == "SKIPPED" and x["severity"] == "hard"]
-    if verdict == "FROZEN_OK" and hard_skipped and not args.allow_skip:
+    non_final_stage = bool(stage) and not stage.get("final", False)
+    if verdict == "FROZEN_OK" and hard_skipped and not args.allow_skip and not non_final_stage:
         verdict = "REVIEW"; notes.append(f"硬门被跳过（缺输入）：{hard_skipped}；补齐后重跑或 --allow-skip")
+    if verdict == "FROZEN_OK" and non_final_stage:
+        verdict = "STAGE_OK"   # 写稿阶段：本阶段所选门全过，不是冻结
+        notes.append(f"阶段 {args.stage}：{stage.get('doc', '')}；进入下一章/下一阶段，冻结须跑 --stage freeze")
 
     # ---- 输出 ----
+    if stage:
+        print(f"STAGE: {args.stage} — {stage.get('doc', '')}")
     print(f"{'gate':<20} {'sev':<5} {'status':<16} note")
     print("-" * 64)
     for x in results:
@@ -172,7 +198,7 @@ def main() -> int:
     print(f"VERDICT: {verdict}")
     for n in notes:
         print(f"  ! {n}")
-    print(json.dumps(reg["verdicts"][verdict], ensure_ascii=False))
+    print(json.dumps(reg["verdicts"].get(verdict, verdict), ensure_ascii=False))
 
     stamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     if args.report:
@@ -191,7 +217,7 @@ def main() -> int:
         args.json.write_text(json.dumps({"verdict": verdict, "notes": notes, "time": stamp,
                                          "results": [{k: v for k, v in x.items() if k != "stdout"} for x in results]},
                                         ensure_ascii=False, indent=1), encoding="utf-8")
-    return {"FROZEN_OK": 0, "TARGETED": 1, "REVIEW": 1, "BLOCKED": 3}[verdict]
+    return {"FROZEN_OK": 0, "STAGE_OK": 0, "TARGETED": 1, "REVIEW": 1, "BLOCKED": 3}[verdict]
 
 
 if __name__ == "__main__":

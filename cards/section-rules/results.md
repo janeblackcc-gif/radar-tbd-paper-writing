@@ -2,6 +2,13 @@
 
 **触发**：`page_blank`（page_fill）；`hedge_over_budget` / `hedge_position` 落在结果章；`figure_first_opening` / `claim_far_from_evidence`（style_audit，卡片 `result-first-repair`）。
 
+## 动笔前（写作契约）
+写这一章之前读这一段；写完跑 `run_gates.py --stage chapter`（16-drafting-loop §三）。
+- 顺序：实验设置（含场景参数表）→ 同种子证据链 → 主结果 → 消融 → 敏感性 → 计算代价。
+- 证据链先于汇总统计：场景表 → 真值 → 含噪观测 → 代表帧量测 → 中间关联结果 → 最终输出 → 失败案例，全链同实例同坐标范围，并写明实例按什么机械规则选出。
+- 每张图配 2–3 句「现象 + 机制」，段首先说现象再指图号。
+- 至少一句适用范围（`hedge_budget` 下限）；数字只走生成宏，比较了外部基线就同步写进摘要。
+
 ## 浮动体（page_blank）
 允许：删 `\FloatBarrier`；`[t]`/`[tb]` 替代 `[H]`/`[p]`；把 `figure*` 移到引用段之前的位置；拆超页浮动体。
 禁止：改正文文字、图注文字、图内容。

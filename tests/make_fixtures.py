@@ -16,7 +16,7 @@ FIX = ROOT / "fixtures"
 
 def w(p: Path, text: str) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(text, encoding="utf-8")
+    p.write_text(text, encoding="utf-8", newline="\n")
 
 
 def j(obj) -> str:
@@ -253,6 +253,51 @@ def m3_fixtures() -> None:
                           "args": ["--config", "{dir}/paper.gates.json", "--review-at", "1"],
                           "expect_exit": 0, "expect_contains": ["保护段，不改", "高优先级 0"]}))
 
+# ---------- M5：写稿阶段（半成品稿 / 只有骨架） ----------
+def m5_fixtures() -> None:
+    def half_draft(d: Path) -> None:
+        cfg(d, glossary="glossary.md", **GT_CFG)
+        w(d / "main.tex", MAIN); w(d / "outline.md", OUTLINE_OK); w(d / "glossary.md", GLOSSARY_OK)
+        w(d / "sections/00_abstract.tex", ABS_GT); w(d / "sections/01_introduction.tex", INTRO_CLEAN)
+
+    d = FIX / "hedge_budget" / "floor_present_only_half_draft"
+    half_draft(d)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "hedge_budget",
+                          "args": ["--config", "{dir}/paper.gates.json", "--no-pdf", "--floor-present-only"],
+                          "expect_exit": 0, "expect_contains": ["下限跳过尚未写出的章节", "下限缺失：无"]}))
+    d = FIX / "hedge_budget" / "floor_default_half_draft"
+    half_draft(d)
+    w(d / "case.json", j({"kind": "must_change", "gate": "hedge_budget",
+                          "args": ["--config", "{dir}/paper.gates.json", "--no-pdf"],
+                          "expect_exit": 1, "expect_contains": ["下限：以下章节缺适用范围句 results/conclusion"]}))
+    d = FIX / "claim_ledger" / "skeleton_no_results_yet"
+    half_draft(d)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "claim_ledger",
+                          "args": ["--config", "{dir}/paper.gates.json"],
+                          "expect_exit": 0, "expect_contains": ["基线镜像跳过"], "expect_not_contains": ["摘要未提及"]}))
+    d = FIX / "run_gates" / "stage_chapter_half_draft"
+    half_draft(d)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "run_gates",
+                          "args": ["--config", "{dir}/paper.gates.json", "--stage", "chapter"],
+                          "expect_exit": 0, "expect_contains": ["VERDICT: STAGE_OK"], "expect_not_contains": ["FROZEN_OK"]}))
+    d = FIX / "run_gates" / "stage_freeze_half_draft"
+    half_draft(d)
+    w(d / "case.json", j({"kind": "must_change", "gate": "run_gates",
+                          "args": ["--config", "{dir}/paper.gates.json", "--stage", "freeze"],
+                          "expect_exit": 1, "expect_contains": ["VERDICT: TARGETED"], "expect_not_contains": ["STAGE_OK"]}))
+    d = FIX / "run_gates" / "stage_skeleton_outline_only"
+    cfg(d, glossary="glossary.md", **GT_CFG)
+    w(d / "main.tex", MAIN); w(d / "outline.md", OUTLINE_OK); w(d / "glossary.md", GLOSSARY_OK); w(d / "sections/.gitkeep", "")
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "run_gates",
+                          "args": ["--config", "{dir}/paper.gates.json", "--stage", "skeleton"],
+                          "expect_exit": 0, "expect_contains": ["VERDICT: STAGE_OK"]}))
+    d = FIX / "run_gates" / "stage_skeleton_dangling_claim"
+    cfg(d, glossary="glossary.md", **GT_CFG)
+    w(d / "main.tex", MAIN); w(d / "outline.md", OUTLINE_BAD); w(d / "glossary.md", GLOSSARY_OK); w(d / "sections/.gitkeep", "")
+    w(d / "case.json", j({"kind": "must_change", "gate": "run_gates",
+                          "args": ["--config", "{dir}/paper.gates.json", "--stage", "skeleton"],
+                          "expect_exit": 1, "expect_contains": ["VERDICT: TARGETED"]}))
+
 
 def main() -> None:
     # ---------- claim_ledger ----------
@@ -339,6 +384,7 @@ def main() -> None:
 
     m2_fixtures()
     m3_fixtures()
+    m5_fixtures()
 
     # ---------- golden 模板 ----------
     w(ROOT / "golden" / "local_paths.example.json", j({"cases": [

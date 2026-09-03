@@ -94,6 +94,8 @@ def main() -> int:
     ap.add_argument("--lcs", type=int, default=12, help="同边界聚类的最长公共子串阈值（字）")
     ap.add_argument("--no-pdf", action="store_true", help="只按源码计数（PDF 缺失时）")
     ap.add_argument("--floor-review", action="store_true", help="下限不足记 REVIEW 而非 HARD_FAIL")
+    ap.add_argument("--floor-present-only", action="store_true",
+                    help="下限只对已写出的章节（有段落单元的角色）生效——写稿阶段 --stage chapter 用；冻结时不得带此参数")
     args = ap.parse_args()
 
     if not args.config.is_file():
@@ -150,7 +152,12 @@ def main() -> int:
     dup_viol = [g for g in groups if len(g) > 2]
 
     # --- 下限 ---
-    floor_missing = [r for r in ("results", "conclusion") if boundary_by_role.get(r, 0) < 1]
+    present_roles = {u.role for u in units}
+    floor_roles = [r for r in ("results", "conclusion") if not args.floor_present_only or r in present_roles]
+    floor_skipped = [r for r in ("results", "conclusion") if r not in floor_roles]
+    if floor_skipped:
+        print(f"INFO 下限跳过尚未写出的章节：{floor_skipped}（写稿阶段；冻结时须去掉 --floor-present-only）")
+    floor_missing = [r for r in floor_roles if boundary_by_role.get(r, 0) < 1]
 
     # --- 汇总 ---
     print("DEFENSIVE SENTENCES（源码侧，按角色）")

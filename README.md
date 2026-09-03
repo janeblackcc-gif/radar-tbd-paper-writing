@@ -37,6 +37,8 @@ git clone <this-repo> ~/.claude/skills/radar-tbd-paper-writing
 ```bash
 python scripts/run_gates.py --config <稿件目录>/paper.gates.json --report gate_report.md
 # 配置里给了 base_rev（上一冻结版提交号）才会跑 change_ledger / semantic_diff
+python scripts/run_gates.py --config <稿件目录>/paper.gates.json --stage skeleton   # 动笔前：闭环表与术语表
+python scripts/run_gates.py --config <稿件目录>/paper.gates.json --stage chapter    # 每写完一章：只对已写章节生效
 ```
 
 输出四态之一，没有可补偿的总分：
@@ -47,6 +49,7 @@ python scripts/run_gates.py --config <稿件目录>/paper.gates.json --report ga
 | `TARGETED` | 硬门失败 → 按报告定点修，每 unit 一张 `cards/` 卡片，同维度 ≤ 2 次 |
 | `REVIEW` | 只剩待审项 / 软热区 / 硬门缺输入被跳过 → 人工判定，写豁免或改 |
 | `FROZEN_OK` | 全过 → **停**。再改只能由导师意见或新事实触发 |
+| `STAGE_OK` | 仅 `--stage skeleton\|chapter`：本阶段所选门全过 → 交该章样张、写下一章；**不是冻结** |
 
 ## 结构
 
@@ -68,6 +71,7 @@ references/
   13-style-audit.md           style_audit 信号定义、文档级指标、热区处理、两篇真稿校准记录
   14-routing-and-stop.md      四态判定、硬/软门判据、六条停止规则、卡片路由、配置与豁免
   15-regression-corpus.md     用例 schema、真实失败→用例流程、第一篇历史语料、A/B 六指标
+  16-drafting-loop.md         写稿循环：第 0 天配置、skeleton/chapter/freeze 三阶段、写稿切改稿的时点
 gates/
   gates.json                  门禁注册表：id / 层 / 硬软 / 脚本 / 参数 / 失败即何态；阈值只在这里
 cards/

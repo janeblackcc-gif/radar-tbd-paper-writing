@@ -1,0 +1,14 @@
+{
+ "kind": "must_change",
+ "gate": "run_gates",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--stage",
+  "skeleton"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "VERDICT: TARGETED"
+ ]
+}

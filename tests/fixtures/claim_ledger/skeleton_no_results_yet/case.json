@@ -1,0 +1,15 @@
+{
+ "kind": "must_preserve",
+ "gate": "claim_ledger",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "基线镜像跳过"
+ ],
+ "expect_not_contains": [
+  "摘要未提及"
+ ]
+}

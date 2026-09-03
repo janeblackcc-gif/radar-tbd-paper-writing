@@ -128,10 +128,15 @@ def main() -> int:
         keys = [name] + aliases.get(name, [])
         return any(k in txt for k in keys)
 
-    if not external:
-        review.append("结果章未识别到外部基线名；若确有外部比较请在配置 external_baselines 里声明")
-    missing_abs = [n for n in external if not mentioned(n, abstract_txt)]
-    missing_con = [n for n in external if not mentioned(n, concl_txt)]
+    if not results_txt.strip():
+        # 写稿阶段：结果章还没内容，镜像无从谈起；结果章写完当天重跑即生效
+        print("INFO 结果章尚无内容：基线镜像跳过（写稿阶段；结果章写完当天重跑）")
+        missing_abs, missing_con = [], []
+    else:
+        if not external:
+            review.append("结果章未识别到外部基线名；若确有外部比较请在配置 external_baselines 里声明")
+        missing_abs = [n for n in external if not mentioned(n, abstract_txt)]
+        missing_con = [n for n in external if not mentioned(n, concl_txt)]
     if missing_abs:
         fail.append("基线镜像：结果章比较了 " + "、".join(missing_abs) + "，摘要未提及（02-narrative 硬规则：做了基线比较，比较结论必须进摘要）")
     if missing_con:

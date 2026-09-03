@@ -16,6 +16,7 @@
 | **TARGETED** | 至少一个硬门 `HARD_FAIL` | 按报告里的 unit / 失败项定点修。每 unit 只套一张卡片（见 §四），同维度最多 2 次 |
 | **REVIEW** | 硬门全过，但有 `REVIEW_REQUIRED` 项、软热区超阈，或硬门因缺输入被跳过 | 人工逐条判定：写豁免（带标签与理由）或改。判定完重跑 |
 | **FROZEN_OK** | 硬门全过、无待审项、无硬门跳过 | **停止**。再改只能由 §三 的触发条件启动 |
+| **STAGE_OK** | 仅写稿阶段 `--stage skeleton\|chapter`：该阶段所选门全过（缺输入的门跳过不降级） | 交该章样张、写下一章。**不是冻结**——冻结只由 `--stage freeze` 的 FROZEN_OK 给出（16-drafting-loop） |
 
 三条硬约束：
 
@@ -121,7 +122,7 @@ TARGETED 报告里的每个失败项带一个 reason_code。agent 按下表只�
 
 `base_rev` 是上一冻结版的 git 提交号或标签，`change_ledger` / `semantic_diff` 拿它取旧版；缺失时这两门被跳过。`ledger` 缺省为稿件目录下的 `edits/units.jsonl`。`concept_groups` 见 03-diction §六。
 
-`pdf_base` / `macro_base` 缺失时契约门被跳过，整体最多判 REVIEW，不判 FROZEN_OK——第一次跑没有基线是正常的，但**冻结前必须补齐**。
+`pdf_base` / `macro_base` 缺失时契约门被跳过，整体最多判 REVIEW，不判 FROZEN_OK——第一次跑没有基线是正常的，但**冻结前必须补齐**。写稿阶段用 `--stage skeleton|chapter`（注册表 `stages` 键，16-drafting-loop）：只跑该阶段的门，缺输入的门跳过不降级，全过判 STAGE_OK。
 
 豁免文件 `paper.exemptions.json` 按门禁分键，每条带 `match`（原句子串，不是正则）、`tag`、`reason`：
 

@@ -1,0 +1,14 @@
+{
+ "kind": "must_preserve",
+ "gate": "run_gates",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--stage",
+  "skeleton"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "VERDICT: STAGE_OK"
+ ]
+}

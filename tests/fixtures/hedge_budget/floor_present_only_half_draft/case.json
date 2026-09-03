@@ -1,0 +1,15 @@
+{
+ "kind": "must_preserve",
+ "gate": "hedge_budget",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--no-pdf",
+  "--floor-present-only"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "下限跳过尚未写出的章节",
+  "下限缺失：无"
+ ]
+}

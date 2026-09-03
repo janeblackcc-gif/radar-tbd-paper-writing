@@ -1,0 +1,17 @@
+{
+ "kind": "must_change",
+ "gate": "run_gates",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--stage",
+  "freeze"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "VERDICT: TARGETED"
+ ],
+ "expect_not_contains": [
+  "STAGE_OK"
+ ]
+}

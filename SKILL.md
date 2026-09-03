@@ -53,6 +53,10 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 
 任何一轮改稿开始前三条契约必须就绪，否则判定 **BLOCKED**、禁止改稿：**科学真实性契约**（闭环表 + 生成宏 + 术语表冻结了什么绝对不能变）、**编辑范围契约**（这一轮允许碰哪些文本；结构轮之后段落边界冻结）、**策略契约**（为什么还要改、改哪个 unit、改到哪停）。详见 [references/12-edit-contract.md](references/12-edit-contract.md)。
 
+### 写稿循环：门禁从第 0 天起就用，不是等稿子写烂了再修
+
+配置、大纲闭环表、术语表、禁用词文件在动笔前就位，跑 `run_gates.py --stage skeleton`；此后每写完一章跑 `--stage chapter`——这一阶段只跑对已写章节有意义的门（下限只查已存在的结果 / 结论章，结果章未写时跳过基线镜像），全过判 `STAGE_OK`，可交该章样张；全文写完首次编译后跑 `--stage freeze`，`FROZEN_OK` 才是冻结，冻结提交号写进 `base_rev`，账本从此刻开始。每张 `cards/section-rules/*.md` 的「动笔前（写作契约）」段是写这一章前要读的必备项。完整循环见 [references/16-drafting-loop.md](references/16-drafting-loop.md)。
+
 ### 第 1 层 · 骨架
 
 正文动笔前，先落盘一份**独立的大纲与逻辑链文件**（它不是任何章节的草稿）。缺这一步，后面所有润色都会随被删章节一起报废。
@@ -182,6 +186,7 @@ TARGETED 时每个 unit 只套**一张**卡片（`cards/`），不跑全套轮�
 | [12-edit-contract.md](references/12-edit-contract.md) | 任何改稿轮开始前：三契约、阶段→可改范围表、语义不变量、候选账本 schema |
 | [14-routing-and-stop.md](references/14-routing-and-stop.md) | 跑门禁、读判定、决定改还是停；硬/软门判据、六条停止规则、卡片路由、项目配置与豁免格式 |
 | [15-regression-corpus.md](references/15-regression-corpus.md) | 改门禁脚本或阈值前：用例 schema、把真实失败变用例的流程、第一篇 r10→r22 的历史语料、A/B 六指标 |
+| [16-drafting-loop.md](references/16-drafting-loop.md) | **动笔前与逐章写作**：第 0 天配置、`--stage skeleton/chapter/freeze` 三阶段、从写稿切到改稿的时点 |
 
 ## 九、scripts
 
@@ -189,6 +194,7 @@ TARGETED 时每个 unit 只套**一张**卡片（`cards/`），不跑全套轮�
 
 ```bash
 scripts/run_gates.py --config <稿件目录>/paper.gates.json --report gate_report.md
+scripts/run_gates.py --config <稿件目录>/paper.gates.json --stage skeleton|chapter   # 写稿阶段：只跑该阶段的门，全过 STAGE_OK（不是冻结）
 #   → VERDICT: BLOCKED | TARGETED | REVIEW | FROZEN_OK   （退出码 3 / 1 / 1 / 0）
 scripts/run_regressions.py          # 改任何门禁脚本前后必须全绿
 ```
