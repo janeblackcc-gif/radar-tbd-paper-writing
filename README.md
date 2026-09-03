@@ -68,9 +68,9 @@ references/
   10-chinese.md               中文特有：量词歧义、中英混排、伪代码语言、翻译轮
   11-naturalness.md           第 4 层表层自然度：十项职责、反向退化信号、无明确问题不改、优先级
   12-edit-contract.md         三契约：科学真实性 / 编辑范围 / 策略；语义不变量；候选账本
-  13-style-audit.md           style_audit 信号定义、文档级指标、热区处理、两篇真稿校准记录
+  13-style-audit.md           style_audit 信号定义、文档级指标、热区处理
   14-routing-and-stop.md      四态判定、硬/软门判据、六条停止规则、卡片路由、配置与豁免
-  15-regression-corpus.md     用例 schema、真实失败→用例流程、第一篇历史语料、A/B 六指标
+  15-regression-corpus.md     用例 schema、真实失败→用例流程、第一篇历史语料、全部门禁校准记录、A/B 六指标
   16-drafting-loop.md         写稿循环：第 0 天配置、skeleton/chapter/freeze 三阶段、写稿切改稿的时点
 gates/
   gates.json                  门禁注册表：id / 层 / 硬软 / 脚本 / 参数 / 失败即何态；阈值只在这里
@@ -101,7 +101,7 @@ tests/
 
 ## 门禁如何进注册表
 
-新门禁必须先在**两份真稿**上校准：一份已过审的定稿（不得被它拦），一份在改的草稿（已知缺陷必须拦住）。本仓库的实例：`claim_ledger` 第一版在定稿上误报 10 条——闭环表里合法的「bootstrap 区间」「三臂消融」「评价合同」都不是图表引用；放宽证据钩子、样本量缺失降 REVIEW 之后才标 hard。
+新门禁必须先在**两份真稿**上校准：一份已过审的定稿（不得被它拦），一份在改的草稿（已知缺陷必须拦住）。每个门的校准记录只在 `references/15-regression-corpus.md` §八 维护。
 
 每一次真实失败都转成 `tests/fixtures` 的一条用例；改任何门禁脚本前后 `run_regressions.py` 必须全绿。第一篇 r10→r22 的六个提交已作为历史语料进 golden：r10 母稿的「结果章比较四类基线而摘要不提」「结果章无适用范围句」两条硬失败，当时靠导师读出来，现在由 `claim_ledger` / `hedge_budget` 在快照上复现（references/15-regression-corpus.md §五）。
 

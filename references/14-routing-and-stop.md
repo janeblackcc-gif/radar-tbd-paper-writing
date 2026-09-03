@@ -37,7 +37,7 @@
 
 判据：**门禁检查的是否是「稿子说了什么」。** 数字、方向、边界、术语、结构、版面是硬门；「读起来顺不顺」是软门。硬门的阈值只放 `gates.json`，不散落在脚本默认值里。
 
-新门禁进注册表前必须先在两份真稿上跑过：一份是已过审的定稿（不得被它拦），一份是在改的草稿（它必须拦住已知缺陷）。本仓库的记录：`claim_ledger` 第一版在定稿上误报 10 条——闭环表里合法的「bootstrap 区间」「三臂消融」「评价合同」都不是图表引用；放宽证据钩子、样本量缺失降 REVIEW 之后才标硬。`semantic_diff` 第一版把段落拆分造成的数字「移动」判硬失败、把 `\Omega` 当数据宏，改成文件级核对并加非数据宏黑名单后，第二篇工作区对 HEAD 的硬失败从 27 段降到 24 段，剩下的全是真改动（加引用、内联参数、数字入宏）；`term_variants` 的后缀词族启发式在定稿上列出 8 个词族（过门限 / 低门限本就是不同概念），因此降为纯信息，同义关系只认 `concept_groups`。**没做过这一步的门不许标 hard。**
+新门禁进注册表前必须先在两份真稿上跑过：一份是已过审的定稿（不得被它拦），一份是在改的草稿（它必须拦住已知缺陷）。**没做过这一步的门不许标 hard。** 每个门的校准记录（误报、放宽了什么、前后数字）只记在 [15-regression-corpus.md](15-regression-corpus.md) §八。
 
 ## 三、六条停止规则
 
@@ -137,12 +137,4 @@ TARGETED 报告里的每个失败项带一个 reason_code。agent 按下表只�
 
 ## 八、回归：每一次真实失败都变成一条用例
 
-`tests/fixtures/<gate>/<case>/case.json` 三类：
-
-- `must_change`：门禁必须拦住的合成缺陷（引言出现防御句；结果章比较了 GT 而摘要不提；半空页）
-- `must_preserve`：门禁不得误伤的合法写法（结果 1 次 + 结论呼应 1 次的同一边界；末页短页；合法的定义式对照句）
-- `manual_review`：只能转人工的情形（非法豁免标签、按页豁免）
-
-`scripts/run_regressions.py` 全绿是改任何门禁脚本的前置条件。真稿端到端放 `tests/golden/local_paths.json`（gitignored，只有本地路径与期望判定）。
-
-新增规则的流程：先写 `must_change` 用例复现事故 → 改门禁让它红 → 补 `must_preserve` 用例证明没误伤 → 在两份真稿上跑 → 再标 hard。用例 schema、`git_case` / `synth_pgm` 字段、golden 的 config 型与 script 型（git 历史回放）、第一篇 r10→r22 历史语料与 A/B 六指标见 [15-regression-corpus.md](15-regression-corpus.md)。
+`scripts/run_regressions.py` 全绿是改任何门禁脚本的前置条件。用例三类（must_change / must_preserve / manual_review）、schema、golden 两型、真实失败→用例的七步流程、历史语料与校准记录全部在 [15-regression-corpus.md](15-regression-corpus.md)。

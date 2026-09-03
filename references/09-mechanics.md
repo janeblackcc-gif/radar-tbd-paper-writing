@@ -58,18 +58,7 @@ WP1 词汇 → WP2 结构 → WP3 图表 → WP4 参考文献
 | r5 | 宏对账、claim 边界、术语一致性、统计口径 **全过** | 「臃肿、跳跃、不知所云、没有形成连贯的论文叙事」 |
 | r6 | 结构重构完成、六章逐章过审 | 「major revisions，连我这关都过不了」+ 70 条批注 |
 
-因此每轮验收必须三层分做，各有独立的机械化手段：
-
-| 层 | 手段 | 门禁 | 交付物 |
-|---|---|---|---|
-| **claim 纪律** | 主张—证据闭环表逐条销账 + 基线镜像 | `claim_ledger`（硬） | 销账表 / PROOF 块 |
-| **叙事连贯** | 逐章复述因果链 + 按范文量表自比 | —（人工） | 自比量表 |
-| **防御性表述** | 上限 / 位置 / 同边界 ≤ 2 / 下限 | `hedge_budget`（硬） | PROOF 块 + 豁免文件 |
-| **词汇** | 禁用词双范围 grep 清零 | `jargon_scan`（硬，命中需人工比对） | 扫描表达式 + 退出码 |
-| **排版** | PDF 页级渲染目检；半空页机器抓 | `page_fill`（硬）+ 目检 | 目检记录 |
-| **改动可信度** | 宏零变化；逐页字符数 delta 归因 | `macro_zero_change`、`page_delta`（硬，失败即 BLOCKED） | 残差 = 0 |
-
-`scripts/run_gates.py` 一次跑完注册表里的全部门禁并聚合成四态判定；判定语义与停止规则见 [14-routing-and-stop.md](14-routing-and-stop.md)。
+因此每轮验收必须分层分做，各层由哪个门禁承担只在 SKILL.md §四 的验收表里维护一份；判定语义与停止规则见 [14-routing-and-stop.md](14-routing-and-stop.md)。
 
 ## 四、三列对照单
 
@@ -79,9 +68,7 @@ WP1 词汇 → WP2 结构 → WP3 图表 → WP4 参考文献
 清单号 → 文件:行（改后行号）→ 原文 → 新文 → 依据
 ```
 
-**「数据核对后无需改动」的项也照样登记**，并给出核对结果。本项目 r11 轮 13 条里有 3 条是这种（如 #6：「新 CI：+0.33 pp [−0.22, +0.89]⋯原句与新数据方向一致」）。
-
-机器版是候选账本 `edits/units.jsonl`（12-edit-contract §四）：三列的信息全在字段里，`scripts/change_ledger.py` 核对两版之间每个改动段落都有 `accept|manual` 条目，「核对后无需改动」对应 `decision: reject`（该段随后若仍变了，脚本记待审）。没有 git 基线的场合手工对照单照旧。
+**「数据核对后无需改动」的项也照样登记**，并给出核对结果（如 #6：「新 CI：+0.33 pp [−0.22, +0.89]⋯原句与新数据方向一致」）。机器版是候选账本 `edits/units.jsonl`，字段与核对命令见 [12-edit-contract.md](12-edit-contract.md) §四。
 
 ## 五、PLAN_DISCREPANCY：范围外问题登记不动手
 
@@ -119,16 +106,9 @@ whole-document delta : +163
   residual           : +0
 ```
 
-残差非零说明有未登记的改动。
+残差非零说明有未登记的改动；残差为零不构成充分证明（等长改写不产生 delta），充分性由段落级账本归因与语义不变量闭合（[12-edit-contract.md](12-edit-contract.md) §四）。
 
-页级 delta 抓不住等长改写。段落级版本：
-
-```bash
-python scripts/change_ledger.py --config paper.gates.json --base-rev <上一冻结版>   # 未归因段落数必须为 0
-python scripts/semantic_diff.py  --config paper.gates.json --old-rev  <上一冻结版>   # 数字/单位/引用/宏/图表号逐段一致
-```
-
-配套脚本：`scripts/page_delta.py`（页级）、`scripts/change_ledger.py`（段落级归因）、`scripts/semantic_diff.py`（段落级语义不变量）。
+配套脚本：`scripts/page_delta.py`。
 
 ## 七、删减去向清单
 

@@ -90,8 +90,9 @@ trigger  : FROZEN_OK 之后继续改的事件（导师意见 / 新事实）
 - `decision ∈ {accept, reject, manual}`；只有 `accept` 与 `manual` 进正文。
 - `covers` 列出该条目解释的全部 unit（一次改动合并两段时写两个 id）。
 - 两版之间 `git diff` 里每个变了的 unit 必须能在账本里找到 `accept|manual` 条目，否则 `change_ledger` 判 HARD_FAIL——这是 09-mechanics §六「逐页 delta 残差必须为 0」的段落级版本，且抓得住等长改写。
+- **「数据核对后无需改动」的项也照样登记**，写 `decision: reject` 并在 `review_note` 给出核对结果（本项目 r11 轮 13 条里有 3 条是这种）；该段随后若仍变了，`change_ledger` 记待审。
 
-它替代的是三列对照单（09-mechanics §四）的手工形式，三列的信息（原文 → 新文 → 依据）全在字段里。
+它替代的是三列对照单（09-mechanics §四）的手工形式，三列的信息（原文 → 新文 → 依据）全在字段里；没有 git 基线的场合手工对照单照旧。
 
 核对命令（`base_rev` 写在配置里时 `run_gates.py` 会自动跑这两门）：
 
@@ -104,12 +105,6 @@ python scripts/semantic_diff.py  --config paper.gates.json --old-rev  <上一冻
 
 三个它能防住的事故：模型为了改一处重复顺便重写整段；第二轮把第一轮改好的句子再换一遍同义词；后续发现问题时不知道是哪一轮引入的。
 
-## 五、与三层验收的关系
+## 五、与验收各层的关系
 
-| 09-mechanics §三 的层 | 契约 |
-|---|---|
-| claim 纪律 | 科学真实性契约 → `claim_ledger` |
-| 词汇 | 科学真实性契约（术语表）→ `jargon_scan` / `term_variants` |
-| 改动可信度 | 编辑范围契约 → `page_delta` / `change_ledger` |
-| 排版 | — → `page_fill` + 页级目检 |
-| 叙事连贯 | 仍是人工：逐章复述因果链 + 范文量表自比 |
+哪一层由哪个门禁承担，只在 SKILL.md §四 的验收表里维护一份；这里不复制。对应关系：claim 纪律与词汇归科学真实性契约，改动可信度归编辑范围契约，叙事连贯仍是人工。
