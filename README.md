@@ -36,6 +36,7 @@ git clone <this-repo> ~/.claude/skills/radar-tbd-paper-writing
 
 ```bash
 python scripts/run_gates.py --config <稿件目录>/paper.gates.json --report gate_report.md
+# 配置里给了 base_rev（上一冻结版提交号）才会跑 change_ledger / semantic_diff
 ```
 
 输出四态之一，没有可补偿的总分：
@@ -62,13 +63,16 @@ references/
   08-experiment.md            实验设计：预承诺收窄规则、指标矩阵、统计措辞
   09-mechanics.md             改稿流程：逐章硬停点、三列对照单、页级目检、阶段硬门
   10-chinese.md               中文特有：量词歧义、中英混排、伪代码语言、翻译轮
+  11-naturalness.md           第 4 层表层自然度：十项职责、反向退化信号、无明确问题不改、优先级
   12-edit-contract.md         三契约：科学真实性 / 编辑范围 / 策略；语义不变量；候选账本
+  13-style-audit.md           style_audit 信号定义、文档级指标、热区处理、两篇真稿校准记录
   14-routing-and-stop.md      四态判定、硬/软门判据、六条停止规则、卡片路由、配置与豁免
+  15-regression-corpus.md     用例 schema、真实失败→用例流程、第一篇历史语料、A/B 六指标
 gates/
   gates.json                  门禁注册表：id / 层 / 硬软 / 脚本 / 参数 / 失败即何态；阈值只在这里
 cards/
-  section-rules/              摘要 / 结论 / 结果章卡片：触发 → 允许改 → 禁止改 → 必保留 → 自检与停止
-  dimensions/                 hedging-balance / final-copyedit
+  section-rules/              摘要 / 引言 / 相关工作 / 方法 / 结果 / 讨论 / 结论：触发 → 允许改 → 禁止改 → 必保留 → 自检与停止
+  dimensions/                 hedging-balance / final-copyedit / template-repair / noun-chain-unpack / syntax-rhythm / result-first-repair
 scripts/
   run_gates.py                编排器：按注册表逐门执行 → 四态判定 + Markdown 报告
   run_regressions.py          回归总闸：合成用例 + 真稿端到端（本地路径，gitignored）
@@ -76,6 +80,10 @@ scripts/
   claim_ledger.py             硬门：闭环表每行有证据钩子/样本量/边界；结果章外部基线摘要必提
   hedge_budget.py             硬门：防御句上限 / 位置白名单 / 同边界 ≤ 2 / 结果与结论各 ≥ 1 句适用范围
   page_fill.py                硬门：非末页尾部空白 > 35% 正文高度（双栏按半页）；纯 Python 解析 PGM
+  change_ledger.py            契约门：两版之间每个改动段落须在 edits/units.jsonl 有 accept|manual 条目
+  semantic_diff.py            硬门：数值/单位/引用/宏/图表号逐段一致；方向词只待审；支持中→英段落对
+  term_variants.py            硬门：术语表第四列避免用法零命中；concept_groups 非规范形态待审
+  style_audit.py              软诊断：模板句/连接词/名词链/节奏/结果段首热区 + 文档级指标 + baseline delta；永不失败
   macro_diff.py               契约门：宏零变化三重校验
   page_delta.py               契约门：逐页字符数 delta 归因，残差必须为 0
   jargon_scan.py              硬门：禁用词双范围扫描（源码 + PDF）
@@ -83,14 +91,15 @@ scripts/
 tests/
   make_fixtures.py            生成合成用例（幂等）
   fixtures/<gate>/<case>/     must_change / must_preserve / manual_review 三类
-  golden/local_paths.example.json   真稿端到端配置模板（真实路径不入库）
+  golden/local_paths.example.json   真稿端到端配置模板（真实路径不入库）；config 型比四态，script 型回放 git 历史
+  golden/local/               （gitignored）真稿配置与历史快照导出 hist/<rev>/
 ```
 
 ## 门禁如何进注册表
 
 新门禁必须先在**两份真稿**上校准：一份已过审的定稿（不得被它拦），一份在改的草稿（已知缺陷必须拦住）。本仓库的实例：`claim_ledger` 第一版在定稿上误报 10 条——闭环表里合法的「bootstrap 区间」「三臂消融」「评价合同」都不是图表引用；放宽证据钩子、样本量缺失降 REVIEW 之后才标 hard。
 
-每一次真实失败都转成 `tests/fixtures` 的一条用例；改任何门禁脚本前后 `run_regressions.py` 必须全绿。
+每一次真实失败都转成 `tests/fixtures` 的一条用例；改任何门禁脚本前后 `run_regressions.py` 必须全绿。第一篇 r10→r22 的六个提交已作为历史语料进 golden：r10 母稿的「结果章比较四类基线而摘要不提」「结果章无适用范围句」两条硬失败，当时靠导师读出来，现在由 `claim_ledger` / `hedge_budget` 在快照上复现（references/15-regression-corpus.md §五）。
 
 ## 两条设计取向
 

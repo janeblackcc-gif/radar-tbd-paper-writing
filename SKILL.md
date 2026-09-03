@@ -98,15 +98,16 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 | claim 纪律 | 闭环表逐条销账；**结果章比较了外部基线，摘要必须提** | `claim_ledger.py` | 硬 |
 | 叙事连贯 | 逐章复述因果链 + 对照范文量表自比 | —（人工） | — |
 | 防御性表述 | 上限 / 位置白名单 / 同边界 ≤ 2 / **下限：结果与结论各 ≥ 1 句适用范围** | `hedge_budget.py` | 硬 |
-| 词汇 | 禁用词双范围 grep + **命中数 = 已人工判定豁免数，豁免逐条列出理由** | `jargon_scan.py` | 硬（命中需人工比对） |
+| 词汇 | 禁用词双范围 grep + **命中数 = 已人工判定豁免数，豁免逐条列出理由**；术语表第四列避免用法零命中；同一概念一个词形（`concept_groups`） | `jargon_scan.py`、`term_variants.py` | 硬（jargon 命中需人工比对；concept_groups 默认待审） |
 | 排版 | PDF **页级渲染目检**；半空页（`\FloatBarrier`、浮动体推挤）机器抓 | `page_fill.py` + 目检 | 硬 |
-| 改动可信度 | 宏零变化；逐页字符数 delta 归因，**残差必须为 0** | `macro_diff.py`、`page_delta.py` | 硬，失败即 BLOCKED |
+| 改动可信度 | 宏零变化；逐页字符数 delta 归因，**残差必须为 0**；段落级改动逐条归因到候选账本；数值/单位/引用/宏/图表号逐段不变 | `macro_diff.py`、`page_delta.py`、`change_ledger.py`、`semantic_diff.py` | 硬；前三者失败即 BLOCKED |
+| 表层自然度 | 模板句 / 连接词密度 / 名词链 / 句长节奏 / 结果段首 / 断言—证据距离；只出热区，每段一张卡片、同段同维度 ≤ 2 次 | `style_audit.py` | **软**：永不失败；高优先级热区 ≥ 3 段才判 REVIEW |
 
 编排器只输出四态：**BLOCKED / TARGETED / REVIEW / FROZEN_OK**，没有可补偿的总分。新门禁进注册表前必须在两份真稿（一份已过审定稿、一份在改草稿）上校准：定稿不得被拦，草稿的已知缺陷必须拦住。
 
 > 词汇层的验收口径不是「退出码必须为 0」。有算法框的中文稿，伪代码体按期刊惯例写英文，PDF 侧必然有命中——拿退出码 0 当唯一门槛会逼你删掉本文的核心概念名。
 >
-> 改动可信度那一层是**必要条件**：残差非零即证明存在未申报改动；残差为零不构成充分证明（等长改写不产生 delta）。充分性由三列对照单 + 源码 diff 闭合。
+> 改动可信度那一层的页级 delta 是**必要条件**：残差非零即证明存在未申报改动；残差为零不构成充分证明（等长改写不产生 delta）。充分性由段落级账本归因（`change_ledger`）与语义不变量（`semantic_diff`）闭合，两者都以上一冻结版的 git 提交为基线。
 
 配套脚本见本 skill 的 `scripts/`。多轮改稿的流程机制（逐章硬停点、对照单、PLAN_DISCREPANCY、删减去向清单）见 [references/09-mechanics.md](references/09-mechanics.md)。
 
@@ -176,8 +177,11 @@ TARGETED 时每个 unit 只套**一张**卡片（`cards/`），不跑全套轮�
 | [08-experiment.md](references/08-experiment.md) | 设计实验、seed 管理、统计口径、分析地位标注 |
 | [09-mechanics.md](references/09-mechanics.md) | 多轮改稿、落实导师/审稿意见、**阶段依赖硬门（§十四）**、交付验收 |
 | [10-chinese.md](references/10-chinese.md) | **中文特有**：量词歧义、中英混排、复合名词、伪代码语言、**中→英翻译轮（§八）** |
+| [11-naturalness.md](references/11-naturalness.md) | 第 4 层表层自然度：十项职责、反向退化信号、「无明确问题不改」、优先级 |
+| [13-style-audit.md](references/13-style-audit.md) | style_audit 信号定义、文档级指标、热区处理、两篇真稿的校准记录 |
 | [12-edit-contract.md](references/12-edit-contract.md) | 任何改稿轮开始前：三契约、阶段→可改范围表、语义不变量、候选账本 schema |
 | [14-routing-and-stop.md](references/14-routing-and-stop.md) | 跑门禁、读判定、决定改还是停；硬/软门判据、六条停止规则、卡片路由、项目配置与豁免格式 |
+| [15-regression-corpus.md](references/15-regression-corpus.md) | 改门禁脚本或阈值前：用例 schema、把真实失败变用例的流程、第一篇 r10→r22 的历史语料、A/B 六指标 |
 
 ## 九、scripts
 
@@ -198,6 +202,14 @@ scripts/claim_ledger.py --config paper.gates.json
 scripts/hedge_budget.py --config paper.gates.json [--per20 10] [--lcs 12]
 # 半空页（非末页尾部空白 > 35% 正文高度；双栏按半页分别计）
 scripts/page_fill.py --pdf main.pdf [--threshold 0.35] [--exemptions paper.exemptions.json]
+# 段落级改动归因：两版之间每个改动段落必须在 edits/units.jsonl 有 accept|manual 条目（残差 = 0）
+scripts/change_ledger.py --config paper.gates.json --base-rev <上一冻结版>
+# 语义不变量：数值/单位/引用/宏/图表号逐段一致（HARD）；方向词/范围词/否定计数只待审；中→英用 --pairs --mode ze
+scripts/semantic_diff.py --config paper.gates.json --old-rev <上一冻结版>   # 或 --old DIR --new DIR / --pairs pairs.json --mode ze
+# 术语一致性：术语表第四列避免用法（HARD，可豁免）+ concept_groups 非规范形态（待审；--enforce 后硬）
+scripts/term_variants.py --config paper.gates.json [--enforce]
+# 表层自然度软诊断：热区 top-N + 文档级指标；--json 落盘后下一轮 --baseline 看 delta；永不退出 1
+scripts/style_audit.py --config paper.gates.json [--top 10] [--review-at 3] [--json style.json] [--baseline prev.json]
 
 # 宏零变化三重校验 → MISSING/CHANGED/ADDED + VERDICT（退出码 0=PASS）
 scripts/macro_diff.py <old.tex> <new.tex> [--expect-added N] [--show-added]

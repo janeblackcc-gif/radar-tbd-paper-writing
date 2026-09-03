@@ -27,15 +27,16 @@
 
 | 层 | 门禁 | 硬/软 | 失败即 |
 |---|---|---|---|
-| 0 契约 | `macro_zero_change`（宏零变化）、`page_delta`（改动归因残差） | 硬 | BLOCKED |
+| 0 契约 | `macro_zero_change`（宏零变化）、`page_delta`（页级改动归因残差）、`change_ledger`（段落级改动归因：账本残差 = 0） | 硬 | BLOCKED |
+| 0 契约 | `semantic_diff`（语义不变量：数值/单位/引用键/宏名/图表号/「分别」序列逐段一致；方向词、范围限定、否定计数只待审） | 硬 | TARGETED |
 | 1 骨架 | `claim_ledger`（闭环表完整、基线进摘要） | 硬 | TARGETED |
-| 3 词汇 | `hedge_budget`（防御句上限/位置/同边界≤2/**下限**）、`jargon_scan`（禁用词双范围） | 硬 | TARGETED（jargon 命中需与豁免数比对，脚本本身只给 REVIEW） |
+| 3 词汇 | `hedge_budget`（防御句上限/位置/同边界≤2/**下限**）、`term_variants`（术语表避免用法；`concept_groups` 非规范形态）、`jargon_scan`（禁用词双范围） | 硬 | TARGETED（jargon 命中需与豁免数比对，脚本本身只给 REVIEW；concept_groups 默认待审，`--enforce` 后硬） |
 | 5 验收 | `page_fill`（半空页） | 硬，可按页豁免 | TARGETED |
-| 4 自然度 | `style_audit`（M3 交付） | **软** | 只出热区 |
+| 4 自然度 | `style_audit`（模板句 / 连接词密度 / 名词链 / 句法节奏 / 结果段首 / 断言—证据距离） | **软** | 只出热区；高优先级热区 ≥ `--review-at`（注册表取 3）才判 REVIEW |
 
 判据：**门禁检查的是否是「稿子说了什么」。** 数字、方向、边界、术语、结构、版面是硬门；「读起来顺不顺」是软门。硬门的阈值只放 `gates.json`，不散落在脚本默认值里。
 
-新门禁进注册表前必须先在两份真稿上跑过：一份是已过审的定稿（不得被它拦），一份是在改的草稿（它必须拦住已知缺陷）。本仓库的记录：`claim_ledger` 第一版在定稿上误报 10 条——闭环表里合法的「bootstrap 区间」「三臂消融」「评价合同」都不是图表引用；放宽证据钩子、样本量缺失降 REVIEW 之后才标硬。**没做过这一步的门不许标 hard。**
+新门禁进注册表前必须先在两份真稿上跑过：一份是已过审的定稿（不得被它拦），一份是在改的草稿（它必须拦住已知缺陷）。本仓库的记录：`claim_ledger` 第一版在定稿上误报 10 条——闭环表里合法的「bootstrap 区间」「三臂消融」「评价合同」都不是图表引用；放宽证据钩子、样本量缺失降 REVIEW 之后才标硬。`semantic_diff` 第一版把段落拆分造成的数字「移动」判硬失败、把 `\Omega` 当数据宏，改成文件级核对并加非数据宏黑名单后，第二篇工作区对 HEAD 的硬失败从 27 段降到 24 段，剩下的全是真改动（加引用、内联参数、数字入宏）；`term_variants` 的后缀词族启发式在定稿上列出 8 个词族（过门限 / 低门限本就是不同概念），因此降为纯信息，同义关系只认 `concept_groups`。**没做过这一步的门不许标 hard。**
 
 ## 三、六条停止规则
 
@@ -44,7 +45,7 @@
 3. **导师或金标准标记「自然」的段落进入保护名单**（`paper.gates.json` 的 `protected_units`），任何自动改写不得触碰；改它只能由导师意见触发。
 4. **软热区下降不能覆盖任何硬门失败。** 风格改善后硬门仍红，判定仍是 TARGETED。
 5. **无高优先级热区时停止自动改写。** REVIEW 状态下的软热区由人决定要不要理会；不理会就写一条豁免，不要「顺手润色」。
-6. **FROZEN_OK 之后继续修改只能由两类事件触发：具体的导师/审稿意见，或新检测到的事实问题（数据换工作点、代码修正、引用核验失败）。** 触发事件要写进 `edits/units.jsonl` 的 `trigger` 字段。没有触发记录的改动，`change_ledger`（M2）视为未归因。
+6. **FROZEN_OK 之后继续修改只能由两类事件触发：具体的导师/审稿意见，或新检测到的事实问题（数据换工作点、代码修正、引用核验失败）。** 触发事件要写进 `edits/units.jsonl` 的 `trigger` 字段。没有触发记录的改动，`change_ledger` 视为未归因。
 
 ## 四、路由：每 unit 一张卡片
 
@@ -58,8 +59,12 @@ TARGETED 报告里的每个失败项带一个 reason_code。agent 按下表只�
 | `hedge_floor_missing`（hedge_budget） | `cards/section-rules/conclusion.md` | 结论/结果补一句适用范围 | 引入正文没铺垫过的新 caveat |
 | `page_blank`（page_fill） | `cards/section-rules/results.md` §浮动体 | 去 `\FloatBarrier`、改浮动位置、拆大浮动体 | 正文文字 |
 | `jargon_hit`（jargon_scan） | `cards/dimensions/final-copyedit.md` | 正名表替换；图内标签改绘图脚本 | 术语定义句、算法框英文 |
-| `term_variant`（term_variants，M2） | `cards/dimensions/final-copyedit.md` | 统一到术语表冻结词 | 公式符号 |
-| `repeated_opening` / `noun_chain` / `template_phrase`（style_audit，M3） | 对应 `cards/dimensions/*.md` | 该段句法 | 事实、方向、术语、段落边界 |
+| `term_variant`（term_variants） | `cards/dimensions/final-copyedit.md` | 统一到术语表冻结词 | 公式符号 |
+| `template_phrase` / `four_char_hype` / `adverbial_padding` / `connector_density` / `generic_closing`（style_audit） | `cards/dimensions/template-repair.md` | 删模板框架、四字格换已有数字、删空连接词 | 术语、带标签防御句、摘要、缺口句 |
+| `noun_chain` / `triple_de`（style_audit） | `cards/dimensions/noun-chain-unpack.md` | 用显式因果拆句、范围另起一句 | 冻结术语字面、因果方向、数字 |
+| `uniform_rhythm` / `repeated_opening` / `long_sentence` / `paragraph_too_long` / `passive_marker`（style_audit） | `cards/dimensions/syntax-rhythm.md` | 拆并句、换起句、被动改主动、按焦点切段 | 限定范围、图表与解读的同段关系、术语 |
+| `figure_first_opening` / `claim_far_from_evidence`（style_audit） | `cards/dimensions/result-first-repair.md` | 把段内已有的现象句移到段首、补已有钩子 | 新造结论或数字、图注、浮动体 |
+| 章节级人工判定（第一句立技术设定、逐篇罗列、小节无动机句、讨论重复结果章） | `cards/section-rules/{introduction,related-work,method,discussion}.md` | 见各卡片 | 见各卡片 |
 
 卡片是给 agent 自己执行的，不是发给 LLM 改写服务的提示词——所以叫 `cards/` 不叫 `prompts/`。每张卡片固定五段：触发 → 允许改 → 禁止改 → 必保留 → 自检与停止条件。
 
@@ -80,7 +85,7 @@ TARGETED 报告里的每个失败项带一个 reason_code。agent 按下表只�
 | 既有机制（09-mechanics） | 状态机里的位置 |
 |---|---|
 | 逐章硬停点（§一） | 章级 FROZEN_OK 才能进下一章 |
-| 三列对照单（§四） | M2 起由 `edits/units.jsonl` 承担，`change_ledger` 机器核对 |
+| 三列对照单（§四） | 由 `edits/units.jsonl` 承担，`change_ledger` 机器核对 |
 | PLAN_DISCREPANCY（§五） | 范围外问题登记 → 不改；对应 REVIEW 里「写豁免」那条路 |
 | 逐页 delta 残差 = 0（§六） | 契约门 `page_delta`，失败即 BLOCKED |
 | 阶段依赖硬门（§十四） | 骨架层 FROZEN_OK 之前，结构/词汇/自然度门禁不执行 |
@@ -107,9 +112,14 @@ TARGETED 报告里的每个失败项带一个 reason_code。agent 按下表只�
   "pdf_base": "archive/renders/r12.pdf",
   "macro_base": "archive/generated/results_macros_r12.tex",
   "attributions": {"abstract": 40, "section 5.4": 123},
+  "base_rev": "r12-frozen",
+  "concept_groups": {"转弯率假设": ["率切片", "转弯率切片"]},
+  "ledger": "edits/units.jsonl",
   "protected_units": ["05_experiments_results#12"]
 }
 ```
+
+`base_rev` 是上一冻结版的 git 提交号或标签，`change_ledger` / `semantic_diff` 拿它取旧版；缺失时这两门被跳过。`ledger` 缺省为稿件目录下的 `edits/units.jsonl`。`concept_groups` 见 03-diction §六。
 
 `pdf_base` / `macro_base` 缺失时契约门被跳过，整体最多判 REVIEW，不判 FROZEN_OK——第一次跑没有基线是正常的，但**冻结前必须补齐**。
 
@@ -134,4 +144,4 @@ TARGETED 报告里的每个失败项带一个 reason_code。agent 按下表只�
 
 `scripts/run_regressions.py` 全绿是改任何门禁脚本的前置条件。真稿端到端放 `tests/golden/local_paths.json`（gitignored，只有本地路径与期望判定）。
 
-新增规则的流程：先写 `must_change` 用例复现事故 → 改门禁让它红 → 补 `must_preserve` 用例证明没误伤 → 在两份真稿上跑 → 再标 hard。
+新增规则的流程：先写 `must_change` 用例复现事故 → 改门禁让它红 → 补 `must_preserve` 用例证明没误伤 → 在两份真稿上跑 → 再标 hard。用例 schema、`git_case` / `synth_pgm` 字段、golden 的 config 型与 script 型（git 历史回放）、第一篇 r10→r22 历史语料与 A/B 六指标见 [15-regression-corpus.md](15-regression-corpus.md)。

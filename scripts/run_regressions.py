@@ -12,7 +12,15 @@ case.json 字段：
     expect_not_contains   stdout 里不得出现的片段（列表，可空）
     synth_pgm             （仅 page_fill）合成页面规格 [{"fill":1.0,"two_col":true}, ...]，
                           运行前生成到 {dir}/pgm/，跑完删除
+    git_case              （change_ledger / semantic_diff --old-rev 用）{"base":"base","new":"new"}：
+                          把 {dir}/base 复制到临时目录并 git commit，再用 {dir}/new 覆盖工作区；
+                          此时 {dir} 指向该临时目录，跑完删除
     kind                  must_change | must_preserve | manual_review（只作分组显示）
+
+golden（tests/golden/local_paths.json，gitignored）两种条目：
+    {"name", "config", "only": [...], "expect_verdict"}                跑 run_gates.py，比判定
+    {"name", "script": "semantic_diff", "args": [...], "expect_exit", "expect_contains", "expect_not_contains"}
+                                                                      直接跑单个门禁脚本（真稿 git 历史回放）
 
 用法:  python run_regressions.py [--filter 子串] [--golden tests/golden/local_paths.json]
 退出码: 0 = 全绿, 1 = 有失败, 2 = 用法错误
@@ -22,9 +30,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 for _s in (sys.stdout, sys.stderr):
@@ -76,6 +86,29 @@ def synth_pgm(spec: list[dict], out: Path, w: int = 330, h: int = 470) -> None:
         (out / f"p-{i:02d}.pgm").write_bytes(f"P5\n{w} {h}\n255\n".encode() + bytes(px))
 
 
+def _copy_tree(src: Path, dst: Path) -> None:
+    for p in src.rglob("*"):
+        if p.is_file():
+            q = dst / p.relative_to(src)
+            q.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(p, q)
+
+
+def make_git_case(case_dir: Path, spec: dict) -> Path:
+    """base/ → 临时仓库首个提交；new/ → 工作区。返回临时仓库路径。"""
+    tmp = Path(tempfile.mkdtemp(prefix="gate_git_"))
+    env = {**os.environ, "GIT_AUTHOR_NAME": "fixture", "GIT_AUTHOR_EMAIL": "fixture@example.invalid",
+           "GIT_COMMITTER_NAME": "fixture", "GIT_COMMITTER_EMAIL": "fixture@example.invalid"}
+    _copy_tree(case_dir / spec.get("base", "base"), tmp)
+    for cmd in (["git", "init", "-q"], ["git", "add", "-A"], ["git", "commit", "-q", "-m", "base"]):
+        subprocess.run(cmd, cwd=str(tmp), check=True, capture_output=True, env=env)
+    for p in tmp.iterdir():
+        if p.name != ".git":
+            shutil.rmtree(p) if p.is_dir() else p.unlink()
+    _copy_tree(case_dir / spec.get("new", "new"), tmp)
+    return tmp
+
+
 def run_case(case_dir: Path, case: dict) -> tuple[bool, str]:
     gate = case["gate"]
     script = HERE / f"{gate}.py"
@@ -85,13 +118,25 @@ def run_case(case_dir: Path, case: dict) -> tuple[bool, str]:
     if case.get("synth_pgm"):
         pgm_dir = case_dir / "pgm"
         synth_pgm(case["synth_pgm"], pgm_dir)
-    args = [a.replace("{dir}", str(case_dir)) for a in case.get("args", [])]
+    work_dir, tmp_repo = case_dir, None
+    if case.get("git_case"):
+        if not shutil.which("git"):
+            return False, "需要 git（git_case 用例）"
+        tmp_repo = make_git_case(case_dir, case["git_case"])
+        work_dir = tmp_repo
+    args = [a.replace("{dir}", str(work_dir)) for a in case.get("args", [])]
     try:
         r = subprocess.run([sys.executable, str(script)] + args, capture_output=True, text=True,
-                           encoding="utf-8", errors="replace", cwd=str(case_dir))
+                           encoding="utf-8", errors="replace", cwd=str(work_dir))
     finally:
         if pgm_dir:
             shutil.rmtree(pgm_dir, ignore_errors=True)
+        if tmp_repo:
+            shutil.rmtree(tmp_repo, ignore_errors=True)
+    return check_result(r, case)
+
+
+def check_result(r: subprocess.CompletedProcess, case: dict) -> tuple[bool, str]:
     out = r.stdout + "\n" + r.stderr
     problems = []
     if r.returncode != case["expect_exit"]:
@@ -141,6 +186,16 @@ def main() -> int:
         gold = json.loads(args.golden.read_text(encoding="utf-8"))
         print("[golden]")
         for g in gold.get("cases", []):
+            if g.get("script"):
+                script = HERE / f"{g['script']}.py"
+                if not script.is_file():
+                    print(f"  FAIL  {g['name']}（脚本不存在 {script.name}）"); failed += 1; continue
+                r = subprocess.run([sys.executable, str(script)] + [str(a) for a in g.get("args", [])],
+                                   capture_output=True, text=True, encoding="utf-8", errors="replace")
+                ok, msg = check_result(r, g)
+                failed += 0 if ok else 1
+                print(f"  {'PASS' if ok else 'FAIL'}  {g['name']}" + ("" if ok else f"\n      {msg}"))
+                continue
             cfg = Path(g["config"])
             if not cfg.is_file():
                 print(f"  SKIP  {g['name']}（配置不存在：{cfg}）")

@@ -94,6 +94,165 @@ def std_sections(d: Path, abstract=ABS_GT, intro=None, results=RESULTS, concl=CO
     w(d / "sections/05_results.tex", results)
     w(d / "sections/06_conclusion.tex", concl)
 
+# ---------- M2：semantic_diff / change_ledger / term_variants ----------
+RES_OLD = r"""\section{仿真结果}
+在 900 个非零转弯场景中，\method 的 GOSPA 平均降低 61.92 m（图~\ref{fig:gospa}），95\% 配对自助区间不包含零。
+
+与 \gtmethod 的补充比较在同一批阈后观测上进行，样本量为 1050 次配对仿真。
+"""
+RES_NUM_CHANGED = RES_OLD.replace("61.92", "62.19")
+RES_REWORDED = r"""\section{仿真结果}
+\method 在 900 个非零转弯场景中使 GOSPA 平均降低 61.92 m（图~\ref{fig:gospa}），且 95\% 配对自助区间不包含零。
+
+与 \gtmethod 的补充比较在同一批阈后观测上进行，样本量为 1050 次配对仿真。
+"""
+RES_FLIPPED = RES_OLD.replace("区间不包含零", "区间包含零")
+RES_MOVED = r"""\section{仿真结果}
+在 900 个非零转弯场景中，\method 的 GOSPA 平均降低（图~\ref{fig:gospa}），95\% 配对自助区间不包含零。
+
+与 \gtmethod 的补充比较在同一批阈后观测上进行，样本量为 1050 次配对仿真，平均降低 61.92 m。
+"""
+GLOSSARY_OK = """# 术语表
+
+| 冻结词 | 首选外文 | 使用语境 | 避免用法 |
+|---|---|---|---|
+| 过门限量测 | thresholded measurement | 全文 | 不写 thresholded detection；不称 `过阈点` |
+| 刚性编队 | rigid formation | 全文 | `fixed-slot group` |
+"""
+LEDGER_ACCEPT = """{"unit_id": "05_results#2", "covers": ["05_results#2"], "decision": "accept", "reason_code": "number_to_macro", "round": 2}
+"""
+LEDGER_REJECT = """{"unit_id": "05_results#2", "covers": ["05_results#2"], "decision": "reject", "reason_code": "number_to_macro", "round": 2}
+"""
+
+
+def m2_fixtures() -> None:
+    # semantic_diff：目录对
+    def two_dirs(d: Path, old: str, new: str) -> None:
+        w(d / "old" / "05_results.tex", old); w(d / "new" / "05_results.tex", new)
+
+    d = FIX / "semantic_diff" / "number_changed"
+    two_dirs(d, RES_OLD, RES_NUM_CHANGED)
+    w(d / "case.json", j({"kind": "must_change", "gate": "semantic_diff",
+                          "args": ["--old", "{dir}/old", "--new", "{dir}/new"],
+                          "expect_exit": 1, "expect_contains": ["数值变化：-{'61.92': 1} +{'62.19': 1}"]}))
+    d = FIX / "semantic_diff" / "equal_length_reword"
+    two_dirs(d, RES_OLD, RES_REWORDED)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "semantic_diff",
+                          "args": ["--old", "{dir}/old", "--new", "{dir}/new"],
+                          "expect_exit": 0, "expect_contains": ["判定：PASS"]}))
+    d = FIX / "semantic_diff" / "direction_flip"
+    two_dirs(d, RES_OLD, RES_FLIPPED)
+    w(d / "case.json", j({"kind": "manual_review", "gate": "semantic_diff",
+                          "args": ["--old", "{dir}/old", "--new", "{dir}/new"],
+                          "expect_exit": 4, "expect_contains": ["方向翻转：ci_excl0 → ci_incl0"],
+                          "expect_not_contains": ["HARD_FAIL"]}))
+    d = FIX / "semantic_diff" / "number_moved_between_paragraphs"
+    two_dirs(d, RES_OLD, RES_MOVED)
+    w(d / "case.json", j({"kind": "manual_review", "gate": "semantic_diff",
+                          "args": ["--old", "{dir}/old", "--new", "{dir}/new"],
+                          "expect_exit": 4, "expect_contains": ["在同文件段落间移动"],
+                          "expect_not_contains": ["HARD_FAIL"]}))
+    # semantic_diff：中→英段落对
+    d = FIX / "semantic_diff" / "zh_en_pairs_ok"
+    w(d / "pairs.json", j([{"id": "05#1",
+                            "old": "在 900 个非零转弯场景中，GOSPA 平均降低 61.92 m，95\\% 配对自助区间不包含零。",
+                            "new": "Across 900 non-zero-turn scenes, the GOSPA decreases by 61.92 m on average; the 95\\% paired bootstrap interval excludes zero."}]))
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "semantic_diff",
+                          "args": ["--pairs", "{dir}/pairs.json", "--mode", "ze"],
+                          "expect_exit": 0, "expect_contains": ["判定：PASS"]}))
+    d = FIX / "semantic_diff" / "zh_en_number_mismatch"
+    w(d / "pairs.json", j([{"id": "05#1",
+                            "old": "在 900 个非零转弯场景中，GOSPA 平均降低 61.92 m。",
+                            "new": "Across 900 non-zero-turn scenes, the GOSPA decreases by 61.29 m on average."}]))
+    w(d / "case.json", j({"kind": "must_change", "gate": "semantic_diff",
+                          "args": ["--pairs", "{dir}/pairs.json", "--mode", "ze"],
+                          "expect_exit": 1, "expect_contains": ["数值变化"]}))
+
+    # change_ledger：临时 git 仓库（run_regressions 的 git_case）
+    def git_pair(d: Path, ledger) -> None:
+        for sub in ("base", "new"):
+            cfg(d / sub); std_sections(d / sub, results=RES_OLD if sub == "base" else RES_NUM_CHANGED)
+        if ledger is not None:
+            w(d / "new" / "edits" / "units.jsonl", ledger)
+
+    d = FIX / "change_ledger" / "unaccounted_edit"
+    git_pair(d, None)
+    w(d / "case.json", j({"kind": "must_change", "gate": "change_ledger", "git_case": {"base": "base", "new": "new"},
+                          "args": ["--config", "{dir}/paper.gates.json", "--base-rev", "HEAD"],
+                          "expect_exit": 1, "expect_contains": ["未归因 1", "05_results#2"]}))
+    d = FIX / "change_ledger" / "accounted_edit"
+    git_pair(d, LEDGER_ACCEPT)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "change_ledger", "git_case": {"base": "base", "new": "new"},
+                          "args": ["--config", "{dir}/paper.gates.json", "--base-rev", "HEAD"],
+                          "expect_exit": 0, "expect_contains": ["已归因 1；未归因 0"]}))
+    d = FIX / "change_ledger" / "rejected_but_changed"
+    git_pair(d, LEDGER_REJECT)
+    w(d / "case.json", j({"kind": "must_change", "gate": "change_ledger", "git_case": {"base": "base", "new": "new"},
+                          "args": ["--config", "{dir}/paper.gates.json", "--base-rev", "HEAD"],
+                          "expect_exit": 1, "expect_contains": ["未归因 1", "账本判 reject 的单元仍发生了改动"]}))
+
+    # term_variants
+    d = FIX / "term_variants" / "avoided_form_hit"
+    cfg(d, glossary="glossary.md"); std_sections(d, results=RES_OLD.replace("阈后观测", "thresholded detection"))
+    w(d / "glossary.md", GLOSSARY_OK)
+    w(d / "case.json", j({"kind": "must_change", "gate": "term_variants",
+                          "args": ["--config", "{dir}/paper.gates.json", "--no-pdf"],
+                          "expect_exit": 1, "expect_contains": ["避免用法「thresholded detection」"]}))
+    d = FIX / "term_variants" / "clean_glossary"
+    cfg(d, glossary="glossary.md"); std_sections(d, results=RES_OLD); w(d / "glossary.md", GLOSSARY_OK)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "term_variants",
+                          "args": ["--config", "{dir}/paper.gates.json", "--no-pdf"],
+                          "expect_exit": 0, "expect_contains": ["判定：PASS"]}))
+    grp = RES_OLD.replace("非零转弯场景", "转弯率假设覆盖的场景") + "\n每个率切片各自搜索一次；率切片之间不共享候选。\n"
+    d = FIX / "term_variants" / "concept_group_review"
+    cfg(d, glossary="glossary.md", concept_groups={"转弯率假设": ["率切片", "率假设"]}); std_sections(d, results=grp); w(d / "glossary.md", GLOSSARY_OK)
+    w(d / "case.json", j({"kind": "manual_review", "gate": "term_variants",
+                          "args": ["--config", "{dir}/paper.gates.json", "--no-pdf"],
+                          "expect_exit": 4, "expect_contains": ["非规范形态「率切片」：源码 2 处"],
+                          "expect_not_contains": ["非规范形态「率假设」"]}))
+    d = FIX / "term_variants" / "concept_group_enforce"
+    cfg(d, glossary="glossary.md", concept_groups={"转弯率假设": ["率切片"]}); std_sections(d, results=grp); w(d / "glossary.md", GLOSSARY_OK)
+    w(d / "case.json", j({"kind": "must_change", "gate": "term_variants",
+                          "args": ["--config", "{dir}/paper.gates.json", "--no-pdf", "--enforce"],
+                          "expect_exit": 1, "expect_contains": ["非规范形态「率切片」"]}))
+
+# ---------- M3：style_audit（软诊断：永不退出 1） ----------
+STYLE_TEMPLATE_HEAVY = r"""\section{仿真结果}
+值得注意的是，所提方法在各种场景下均显著提升了跟踪精度。然而，传统方法难以有效解决这一问题。因此，本文方法具有重要意义。此外，实验充分验证了方法的有效性。总之，该方法为后续研究奠定了坚实基础。
+
+图~\ref{fig:a} 给出了各方法的对比结果。所提方法优于基线方法。该方法有效地改善了低信噪比条件下幅度证据不足导致的关联歧义增加问题。
+"""
+STYLE_CLEAN = r"""\section{仿真结果}
+在 900 个非零转弯场景中，\method 的 GOSPA 平均降低 61.92 m（图~\ref{fig:gospa}），95\% 配对自助区间不包含零。收益集中在转弯率较大的场景：率越大，恒速近似的预测偏差越大，共享率搜索的补偿也越明显。
+
+与 \gtmethod 的补充比较在同一批阈后观测上进行，样本量为 1050 次配对仿真。
+"""
+
+
+def m3_fixtures() -> None:
+    d = FIX / "style_audit" / "template_heavy_never_fails"
+    w(d / "sections/05_results.tex", STYLE_TEMPLATE_HEAVY)
+    w(d / "case.json", j({"kind": "manual_review", "gate": "style_audit",
+                          "args": ["--tex", "{dir}/sections", "--top", "5"],
+                          "expect_exit": 0,
+                          "expect_contains": ["template_phrase", "generic_closing", "figure_first_opening", "connector_density", "判定：PASS"],
+                          "expect_not_contains": ["HARD_FAIL"]}))
+    d = FIX / "style_audit" / "review_at_threshold"
+    w(d / "sections/05_results.tex", STYLE_TEMPLATE_HEAVY)
+    w(d / "case.json", j({"kind": "manual_review", "gate": "style_audit",
+                          "args": ["--tex", "{dir}/sections", "--review-at", "1"],
+                          "expect_exit": 4, "expect_contains": ["REVIEW_REQUIRED"], "expect_not_contains": ["HARD_FAIL"]}))
+    d = FIX / "style_audit" / "clean_results_paragraphs"
+    cfg(d); std_sections(d, results=STYLE_CLEAN)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "style_audit",
+                          "args": ["--config", "{dir}/paper.gates.json", "--review-at", "1"],
+                          "expect_exit": 0, "expect_contains": ["高优先级 0", "判定：PASS"]}))
+    d = FIX / "style_audit" / "protected_unit_not_counted"
+    cfg(d, protected_units=["05_results#2", "05_results#3"]); std_sections(d, results=STYLE_TEMPLATE_HEAVY)
+    w(d / "case.json", j({"kind": "must_preserve", "gate": "style_audit",
+                          "args": ["--config", "{dir}/paper.gates.json", "--review-at", "1"],
+                          "expect_exit": 0, "expect_contains": ["保护段，不改", "高优先级 0"]}))
+
 
 def main() -> None:
     # ---------- claim_ledger ----------
@@ -178,12 +337,22 @@ def main() -> None:
     w(d / "case.json", j({"kind": "must_preserve", "gate": "latex_scope", "args": ["{dir}/paper.gates.json"],
                           "expect_exit": 0, "expect_contains": ["abstract       1", "results        4", "conclusion     2"]}))
 
+    m2_fixtures()
+    m3_fixtures()
+
     # ---------- golden 模板 ----------
     w(ROOT / "golden" / "local_paths.example.json", j({"cases": [
         {"name": "paper1_final", "config": "C:/path/to/paper1.gates.json",
-         "only": ["claim_ledger", "hedge_budget", "page_fill"], "expect_verdict": "REVIEW"},
+         "only": ["claim_ledger", "hedge_budget", "page_fill", "term_variants", "style_audit"], "expect_verdict": "REVIEW"},
+        {"name": "paper1_final_contract_gates_clean_tree", "config": "C:/path/to/paper1.gates.json",
+         "only": ["change_ledger", "semantic_diff"], "expect_verdict": "FROZEN_OK"},
         {"name": "paper2_draft", "config": "C:/path/to/paper2.gates.json",
-         "only": ["claim_ledger", "hedge_budget", "page_fill"], "expect_verdict": "TARGETED"}]}))
+         "only": ["claim_ledger", "hedge_budget", "page_fill", "term_variants", "style_audit"], "expect_verdict": "TARGETED"},
+        {"name": "paper1_hist_snapshot_abstract_missing_baseline", "config": "C:/path/to/paper1_<rev>.gates.json",
+         "only": ["claim_ledger"], "expect_verdict": "TARGETED"},
+        {"name": "paper1_hist_semdiff_replay", "script": "semantic_diff",
+         "args": ["--config", "C:/path/to/paper1.gates.json", "--old-rev", "<old>", "--new-rev", "<new>", "--quiet-pass"],
+         "expect_exit": 1, "expect_contains": ["数值变化"]}]}))
     print("fixtures:", len(list(FIX.glob("*/*/case.json"))))
 
 

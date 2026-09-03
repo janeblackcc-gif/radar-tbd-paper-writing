@@ -6,9 +6,20 @@
    "only": [
     "claim_ledger",
     "hedge_budget",
-    "page_fill"
+    "page_fill",
+    "term_variants",
+    "style_audit"
    ],
    "expect_verdict": "REVIEW"
+  },
+  {
+   "name": "paper1_final_contract_gates_clean_tree",
+   "config": "C:/path/to/paper1.gates.json",
+   "only": [
+    "change_ledger",
+    "semantic_diff"
+   ],
+   "expect_verdict": "FROZEN_OK"
   },
   {
    "name": "paper2_draft",
@@ -16,9 +27,36 @@
    "only": [
     "claim_ledger",
     "hedge_budget",
-    "page_fill"
+    "page_fill",
+    "term_variants",
+    "style_audit"
    ],
    "expect_verdict": "TARGETED"
+  },
+  {
+   "name": "paper1_hist_snapshot_abstract_missing_baseline",
+   "config": "C:/path/to/paper1_<rev>.gates.json",
+   "only": [
+    "claim_ledger"
+   ],
+   "expect_verdict": "TARGETED"
+  },
+  {
+   "name": "paper1_hist_semdiff_replay",
+   "script": "semantic_diff",
+   "args": [
+    "--config",
+    "C:/path/to/paper1.gates.json",
+    "--old-rev",
+    "<old>",
+    "--new-rev",
+    "<new>",
+    "--quiet-pass"
+   ],
+   "expect_exit": 1,
+   "expect_contains": [
+    "数值变化"
+   ]
   }
  ]
 }
