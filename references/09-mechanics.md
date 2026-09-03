@@ -169,6 +169,8 @@ whole-document delta : +163
 
 ## 十、PDF 页级渲染目检
 
+图表的独立图件目检、嵌入后目检八项、以及图尺寸变化后必须重做的浮动顺序与空白页复查，见 [17-figures-tables-and-visual-qa.md](17-figures-tables-and-visual-qa.md) §七–§八；修图走 `cards/dimensions/figure-visual-repair.md`。
+
 目检里最机械的一项已做成硬门 `scripts/page_fill.py`：非末页正文尾部空白超过全稿正文高度的 35%（双栏按左右半页分别计）即失败，可按页豁免。它抓的是 `\FloatBarrier`、`[H]/[p]` 浮动、过大浮动体推挤造成的半空页——第二篇 v0.4 曾因四个 `\FloatBarrier` 让 13 页变 15 页、三页各空一半，源码 diff 完全看不出来。其余目检项（图标签截断、图例与面板不符、图注编号错位）仍需人眼。
 
 **图必须在页面渲染级别逐页目检，不能只看生成脚本跑通。**

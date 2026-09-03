@@ -72,11 +72,12 @@ references/
   14-routing-and-stop.md      四态判定、硬/软门判据、六条停止规则、卡片路由、配置与豁免
   15-regression-corpus.md     用例 schema、真实失败→用例流程、第一篇历史语料、全部门禁校准记录、A/B 六指标
   16-drafting-loop.md         写稿循环：第 0 天配置、skeleton/chapter/freeze 三阶段、写稿切改稿的时点
+  17-figures-tables-and-visual-qa.md  图表：尺寸由模板定、一个样式层、语义映射、按图类规范、导出、双重目检
 gates/
   gates.json                  门禁注册表：id / 层 / 硬软 / 脚本 / 参数 / 失败即何态；阈值只在这里
 cards/
   section-rules/              摘要 / 引言 / 相关工作 / 方法 / 结果 / 讨论 / 结论：触发 → 允许改 → 禁止改 → 必保留 → 自检与停止
-  dimensions/                 hedging-balance / final-copyedit / template-repair / noun-chain-unpack / syntax-rhythm / result-first-repair
+  dimensions/                 hedging-balance / final-copyedit / template-repair / noun-chain-unpack / syntax-rhythm / result-first-repair / figure-visual-repair
 scripts/
   run_gates.py                编排器：按注册表逐门执行 → 四态判定 + Markdown 报告
   run_regressions.py          回归总闸：合成用例 + 真稿端到端（本地路径，gitignored）

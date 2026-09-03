@@ -58,7 +58,7 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 | 叙事连贯 | 逐章复述因果链 + 范文量表自比 | —（人工） | — |
 | 防御性表述 | 上限 / 位置白名单 / 同边界 ≤ 2 / **下限：结果与结论各 ≥ 1 句适用范围** | `hedge_budget` | 硬 |
 | 词汇 | 禁用词双范围清零（命中数 = 已人工判定豁免数）；术语表避免用法零命中；同一概念一个词形 | `jargon_scan`、`term_variants` | 硬 |
-| 排版 | 页级渲染目检；半空页机器抓 | `page_fill` + 目检 | 硬 |
+| 排版 | 页级渲染目检；半空页机器抓；图表按统一样式层生成并做独立图件 + 嵌入 PDF 双重目检（[17](references/17-figures-tables-and-visual-qa.md)） | `page_fill` + 目检 | 硬 |
 | 改动可信度 | 宏零变化；逐页 delta 残差 = 0（必要条件）；段落级账本归因 + 语义不变量（充分条件） | `macro_diff`、`page_delta`、`change_ledger`、`semantic_diff` | 硬，契约门失败即 BLOCKED |
 | 表层自然度 | 模板句 / 连接词密度 / 名词链 / 节奏 / 结果段首；只出热区 | `style_audit` | **软**，永不失败 |
 
@@ -114,6 +114,7 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 | [14-routing-and-stop.md](references/14-routing-and-stop.md) | 跑门禁、读判定、决定改还是停；硬/软门判据、停止规则、卡片路由、**项目配置与豁免格式（§七）** |
 | [15-regression-corpus.md](references/15-regression-corpus.md) | 改门禁脚本或阈值前：用例 schema、真实失败→用例流程、历史语料、**全部门禁的校准记录**、A/B 六指标 |
 | [16-drafting-loop.md](references/16-drafting-loop.md) | **动笔前与逐章写作**：第 0 天配置、三阶段、从写稿切到改稿的时点 |
+| [17-figures-tables-and-visual-qa.md](references/17-figures-tables-and-visual-qa.md) | 画图、做表、改图：尺寸由模板定、一个样式层、语义映射、按图类规范、导出与字体、双重目检、图尺寸变化后的浮动复查 |
 
 ## 九、scripts
 

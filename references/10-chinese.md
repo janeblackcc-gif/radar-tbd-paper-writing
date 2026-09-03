@@ -148,6 +148,8 @@ SNR  RMSE  GOSPA  OSPA  CFAR  P_D  P_fa  TBD  ML-PDA  GM-PHD
 
 ## 七、图内文字：按图类分层，不是一律中文化
 
+图内文字的语言规则只在本节维护；图的尺寸、样式层、语义映射、导出与目检在 [17-figures-tables-and-visual-qa.md](17-figures-tables-and-visual-qa.md)，那里不设「中文化」硬规则。
+
 **这里最容易过度泛化。** 「中文母稿的图必须全中文」不是规则——本方法的来源论文（已过导师审、已过 70 条批注轮的 r22 定稿）实测就不是这么做的：
 
 | 图类 | 来源论文定稿的**实际**做法 | 判据 |

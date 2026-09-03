@@ -66,6 +66,7 @@ TARGETED 报告里的每个失败项带一个 reason_code。agent 按下表只�
 | `uniform_rhythm` / `repeated_opening` / `long_sentence` / `paragraph_too_long` / `passive_marker`（style_audit） | `cards/dimensions/syntax-rhythm.md` | 拆并句、换起句、被动改主动、按焦点切段 | 限定范围、图表与解读的同段关系、术语 |
 | `figure_first_opening` / `claim_far_from_evidence`（style_audit） | `cards/dimensions/result-first-repair.md` | 把段内已有的现象句移到段首、补已有钩子 | 新造结论或数字、图注、浮动体 |
 | 章节级人工判定（第一句立技术设定、逐篇罗列、小节无动机句、讨论重复结果章） | `cards/section-rules/{introduction,related-work,method,discussion}.md` | 见各卡片 | 见各卡片 |
+| 图表目检发现的裁切 / 图例重叠 / 箭头混乱 / 尺寸失衡 / 色条遮挡 / 表格溢出（17 §七；`page_blank` 由图尺寸变化引起时联动） | `cards/dimensions/figure-visual-repair.md` | 样式层、图例与色条布局、导出参数、浮动位置 | 数据、数值、比较方向、图意 |
 
 卡片是给 agent 自己执行的，不是发给 LLM 改写服务的提示词——所以叫 `cards/` 不叫 `prompts/`。每张卡片固定五段：触发 → 允许改 → 禁止改 → 必保留 → 自检与停止条件。
 
