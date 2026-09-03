@@ -1,0 +1,25 @@
+{
+ "kind": "manual_review",
+ "gate": "page_fill",
+ "args": [
+  "--pgm-dir",
+  "{dir}/pgm",
+  "--exemptions",
+  "{dir}/paper.exemptions.json"
+ ],
+ "synth_pgm": [
+  {
+   "fill": 1.0
+  },
+  {
+   "fill": 0.4
+  },
+  {
+   "fill": 1.0
+  }
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "已豁免页：[2]"
+ ]
+}

@@ -1,0 +1,13 @@
+{
+ "kind": "must_preserve",
+ "gate": "hedge_budget",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--no-pdf"
+ ],
+ "expect_exit": 0,
+ "expect_not_contains": [
+  "同边界在同一章出现 2 次"
+ ]
+}

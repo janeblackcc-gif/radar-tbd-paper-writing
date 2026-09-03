@@ -4,6 +4,8 @@
 
 ## 一、数字宏机制
 
+契约门 `macro_zero_change`（`scripts/macro_diff.py`）：任何一轮改稿开始前既有宏一个都不能变；变了判 BLOCKED，禁止改稿——文字改动建立在错的数字上没有意义。闭环表的完整性与基线镜像由 `claim_ledger` 核对（见 [14-routing-and-stop.md](14-routing-and-stop.md)）。
+
 ### 基本纪律
 
 正文里的**实验聚合数字一律只能通过生成宏注入**。宏文件由读取权威汇总结果的脚本产出，文件头写死：

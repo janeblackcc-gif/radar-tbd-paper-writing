@@ -170,6 +170,8 @@ python scripts/jargon_scan.py --patterns <旧名> --tex sections_zh --tex si --p
 1. `.tex` 源码
 2. **最终 PDF 经 `pdftotext` 抽取的可见文本**
 
+> Windows 下 `pdftotext` 不带 `-enc UTF-8` 会把中文**全部静默丢掉**，只剩拉丁字符与数字——2026-09-02 在两篇稿上实测默认编码抽出 0 个汉字，曾被误判为「PDF 无 ToUnicode 映射」。本 skill 的脚本已内置该参数；手工核验时同样必须带。
+
 坐标轴标签、图例和图内标题同样是读者可见文本，且**通常由绘图代码直接继承变量名，是行话残留的最高发区**——它们在 `.tex` 里 grep 不到。
 
 保留扫描表达式、范围和退出码作为交付证明。

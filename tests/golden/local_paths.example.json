@@ -1,0 +1,24 @@
+{
+ "cases": [
+  {
+   "name": "paper1_final",
+   "config": "C:/path/to/paper1.gates.json",
+   "only": [
+    "claim_ledger",
+    "hedge_budget",
+    "page_fill"
+   ],
+   "expect_verdict": "REVIEW"
+  },
+  {
+   "name": "paper2_draft",
+   "config": "C:/path/to/paper2.gates.json",
+   "only": [
+    "claim_ledger",
+    "hedge_budget",
+    "page_fill"
+   ],
+   "expect_verdict": "TARGETED"
+  }
+ ]
+}

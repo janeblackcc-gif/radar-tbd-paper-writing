@@ -1,0 +1,27 @@
+{
+ "kind": "must_change",
+ "gate": "page_fill",
+ "args": [
+  "--pgm-dir",
+  "{dir}/pgm"
+ ],
+ "synth_pgm": [
+  {
+   "fill": 1.0,
+   "two_col": true
+  },
+  {
+   "fill": 1.0,
+   "right_fill": 0.2,
+   "two_col": true
+  },
+  {
+   "fill": 0.5,
+   "two_col": true
+  }
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "超阈页：[2]"
+ ]
+}

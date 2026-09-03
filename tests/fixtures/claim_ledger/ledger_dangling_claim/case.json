@@ -1,0 +1,13 @@
+{
+ "kind": "must_change",
+ "gate": "claim_ledger",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "证据钩子",
+  "封口/边界列为空"
+ ]
+}

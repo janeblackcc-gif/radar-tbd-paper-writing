@@ -47,7 +47,11 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 
 **照骨架，不照皮肤。** 完整方法（含三列映射表、量化自比维度）见 [references/05-calibration.md](references/05-calibration.md)。
 
-## 四、四层工作流
+## 四、四层工作流（外加第 0 层契约）
+
+### 第 0 层 · 契约
+
+任何一轮改稿开始前三条契约必须就绪，否则判定 **BLOCKED**、禁止改稿：**科学真实性契约**（闭环表 + 生成宏 + 术语表冻结了什么绝对不能变）、**编辑范围契约**（这一轮允许碰哪些文本；结构轮之后段落边界冻结）、**策略契约**（为什么还要改、改哪个 unit、改到哪停）。详见 [references/12-edit-contract.md](references/12-edit-contract.md)。
 
 ### 第 1 层 · 骨架
 
@@ -87,21 +91,36 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 
 ### 第 4 层 · 验收
 
-三层缺陷各有独立的机械化检查手段，缺一层就会"逐项合规却仍被判大改"：
+三层缺陷各有独立的机械化检查手段，缺一层就会"逐项合规却仍被判大改"。能机械化的都已做成门禁脚本，由 `scripts/run_gates.py` 按 `gates/gates.json` 统一执行：
 
-| 层 | 手段 |
-|---|---|
-| claim 纪律 | 关键句 grep + 主张—证据闭环表逐条销账 |
-| 叙事连贯 | 逐章复述因果链 + 对照范文量表自比 |
-| 词汇 | 禁用词双范围 grep + **命中数 = 已人工判定豁免数，豁免逐条列出理由** |
-| 排版 | PDF **页级渲染目检**（图标签截断、图例与面板不符只在页级可见）|
-| 改动可信度 | 逐页字符数 delta 归因，**残差必须为 0** |
+| 层 | 手段 | 门禁脚本 | 硬/软 |
+|---|---|---|---|
+| claim 纪律 | 闭环表逐条销账；**结果章比较了外部基线，摘要必须提** | `claim_ledger.py` | 硬 |
+| 叙事连贯 | 逐章复述因果链 + 对照范文量表自比 | —（人工） | — |
+| 防御性表述 | 上限 / 位置白名单 / 同边界 ≤ 2 / **下限：结果与结论各 ≥ 1 句适用范围** | `hedge_budget.py` | 硬 |
+| 词汇 | 禁用词双范围 grep + **命中数 = 已人工判定豁免数，豁免逐条列出理由** | `jargon_scan.py` | 硬（命中需人工比对） |
+| 排版 | PDF **页级渲染目检**；半空页（`\FloatBarrier`、浮动体推挤）机器抓 | `page_fill.py` + 目检 | 硬 |
+| 改动可信度 | 宏零变化；逐页字符数 delta 归因，**残差必须为 0** | `macro_diff.py`、`page_delta.py` | 硬，失败即 BLOCKED |
+
+编排器只输出四态：**BLOCKED / TARGETED / REVIEW / FROZEN_OK**，没有可补偿的总分。新门禁进注册表前必须在两份真稿（一份已过审定稿、一份在改草稿）上校准：定稿不得被拦，草稿的已知缺陷必须拦住。
 
 > 词汇层的验收口径不是「退出码必须为 0」。有算法框的中文稿，伪代码体按期刊惯例写英文，PDF 侧必然有命中——拿退出码 0 当唯一门槛会逼你删掉本文的核心概念名。
 >
 > 改动可信度那一层是**必要条件**：残差非零即证明存在未申报改动；残差为零不构成充分证明（等长改写不产生 delta）。充分性由三列对照单 + 源码 diff 闭合。
 
 配套脚本见本 skill 的 `scripts/`。多轮改稿的流程机制（逐章硬停点、对照单、PLAN_DISCREPANCY、删减去向清单）见 [references/09-mechanics.md](references/09-mechanics.md)。
+
+### 停止机制
+
+改稿不是「还能润色就继续」，而是一台默认停止的状态机（[references/14-routing-and-stop.md](references/14-routing-and-stop.md)）：
+
+- 同一 unit 同一维度最多自动尝试 **2 次**，第二次无明确改善即转人工
+- 「可以进一步润色」不是理由；继续改必须指名 unit、reason_code 和预期收益
+- 导师标记「自然」的段落进保护名单
+- 软热区下降不能覆盖任何硬门失败；无高优先级热区即停
+- FROZEN_OK 之后再改，只能由具体导师意见或新事实触发，触发事件写进账本
+
+TARGETED 时每个 unit 只套**一张**卡片（`cards/`），不跑全套轮次。
 
 ### 阶段依赖不可交换
 
@@ -133,6 +152,8 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 2. **"结果段禁用问句"是传统工程期刊的口味**。IET/TAES 类适用；ML 会议把 "Does X help?" 当标准段首，照搬反而削弱行文。按目标期刊定。
 3. **批量清洗"不是 X 而是 Y"会误伤合法句式**。只删带假想反驳语气的（"不能被理解为⋯""不应据此认为⋯"）；用于**下定义或指定归属**的对照句是正常中文，不要连坐。
 
+外部佐证：一个独立开发的中文学术降 AI 率工具（FYADR）在实测后**撤回**了自己早期的句长比例、短句配额、被动句配额和检测平台对标分数，并把这些指标降为「只作相对诊断，不驱动改写」。与本方法从相反方向得到同一结论：**风格指标只能定位问题，不能支配科学内容，更不能设配额。**
+
 ## 七、工具边界不得静默决定论文声称什么
 
 "实验数字只走生成宏、禁止手抄"是对的纪律。但本项目出过这样的事故：宏生成器只输出本方法的数字，于是正文在该纪律下**结构性地写不出与基线的对比**，最强结果（九个 SNR 条件全部高于四类基线）只存在于一张图里，摘要开头写的却是消融**不能**证明什么。
@@ -155,10 +176,29 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 | [08-experiment.md](references/08-experiment.md) | 设计实验、seed 管理、统计口径、分析地位标注 |
 | [09-mechanics.md](references/09-mechanics.md) | 多轮改稿、落实导师/审稿意见、**阶段依赖硬门（§十四）**、交付验收 |
 | [10-chinese.md](references/10-chinese.md) | **中文特有**：量词歧义、中英混排、复合名词、伪代码语言、**中→英翻译轮（§八）** |
+| [12-edit-contract.md](references/12-edit-contract.md) | 任何改稿轮开始前：三契约、阶段→可改范围表、语义不变量、候选账本 schema |
+| [14-routing-and-stop.md](references/14-routing-and-stop.md) | 跑门禁、读判定、决定改还是停；硬/软门判据、六条停止规则、卡片路由、项目配置与豁免格式 |
 
 ## 九、scripts
 
+一条命令跑全部门禁（项目配置格式见 14-routing-and-stop.md §七）：
+
 ```bash
+scripts/run_gates.py --config <稿件目录>/paper.gates.json --report gate_report.md
+#   → VERDICT: BLOCKED | TARGETED | REVIEW | FROZEN_OK   （退出码 3 / 1 / 1 / 0）
+scripts/run_regressions.py          # 改任何门禁脚本前后必须全绿
+```
+
+单个门禁：
+
+```bash
+# 闭环表完整性 + 基线镜像（结果章的外部基线摘要必提）
+scripts/claim_ledger.py --config paper.gates.json
+# 防御句上限/位置/同边界≤2/下限；豁免带标签
+scripts/hedge_budget.py --config paper.gates.json [--per20 10] [--lcs 12]
+# 半空页（非末页尾部空白 > 35% 正文高度；双栏按半页分别计）
+scripts/page_fill.py --pdf main.pdf [--threshold 0.35] [--exemptions paper.exemptions.json]
+
 # 宏零变化三重校验 → MISSING/CHANGED/ADDED + VERDICT（退出码 0=PASS）
 scripts/macro_diff.py <old.tex> <new.tex> [--expect-added N] [--show-added]
 
@@ -172,4 +212,8 @@ scripts/jargon_scan.py --patterns scripts/banned-terms-template.txt \
 
 `scripts/banned-terms-template.txt` 分三节：**A 通用英文流程/实现方言**可直接沿用；**B 项目专属标识**和 **C 中文内部造词**是示例，新项目必须整节替换（中文黑话从 [references/03-diction.md](references/03-diction.md) 第二节移入）。
 
-三个脚本都已在本方法的来源仓库上验证：`macro_diff` 复现「69→105 宏、MISSING[] CHANGED[] ADDED 36、PASS」；`page_delta` 复现「20 页、total +163、residual +0」；`jargon_scan` 在定稿源码（排除 `algorithmic`）上零残留，PDF 侧 5 处命中——4 处落在英文伪代码体内按 [10-chinese.md](references/10-chinese.md) §六 规则豁免，1 处是源码 grep 不到的图内轴标签 `Median runtime per run (s)`。
+三个基础脚本都已在本方法的来源仓库上验证：`macro_diff` 复现「69→105 宏、MISSING[] CHANGED[] ADDED 36、PASS」；`page_delta` 复现「20 页、total +163、residual +0」；`jargon_scan` 在定稿源码（排除 `algorithmic`）上零残留，PDF 侧 5 处命中——4 处落在英文伪代码体内按 [10-chinese.md](references/10-chinese.md) §六 规则豁免，1 处是源码 grep 不到的图内轴标签 `Median runtime per run (s)`。
+
+三个新门禁在两份真稿上校准（2026-09-03）：第一篇定稿 `claim_ledger` REVIEW / `hedge_budget` PASS / `page_fill` PASS；第二篇在改草稿 `claim_ledger` HARD_FAIL（摘要缺外部基线）、`hedge_budget` HARD_FAIL（结论章无适用范围句）——两处都是当天真实引入的缺陷。`run_regressions.py` 13 用例 + 2 真稿端到端全绿。
+
+> Windows 下 `pdftotext` **必须带 `-enc UTF-8`**，否则中文全部丢失且不报错（两篇稿实测默认编码抽出 0 个汉字）。所有脚本已内置；自己手跑时别漏。

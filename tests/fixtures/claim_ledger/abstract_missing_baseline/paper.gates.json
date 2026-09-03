@@ -1,0 +1,22 @@
+{
+ "sections": [
+  "sections"
+ ],
+ "outline": "outline.md",
+ "main": "main.tex",
+ "roles": {
+  "05_results": "results",
+  "06_conclusion": "conclusion"
+ },
+ "external_baselines": [
+  "GT-ML-PDA"
+ ],
+ "method_names": [
+  "STR-FCM-TBD"
+ ],
+ "baseline_aliases": {
+  "GT-ML-PDA": [
+   "适配 GT-ML-PDA"
+  ]
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "kind": "must_preserve",
+ "gate": "page_fill",
+ "args": [
+  "--pgm-dir",
+  "{dir}/pgm"
+ ],
+ "synth_pgm": [
+  {
+   "fill": 1.0,
+   "two_col": true
+  },
+  {
+   "fill": 0.95,
+   "two_col": true
+  },
+  {
+   "fill": 0.2,
+   "two_col": true
+  }
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "末页，不计"
+ ]
+}

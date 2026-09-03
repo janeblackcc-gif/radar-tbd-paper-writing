@@ -1,0 +1,13 @@
+{
+ "kind": "must_preserve",
+ "gate": "latex_scope",
+ "args": [
+  "{dir}/paper.gates.json"
+ ],
+ "expect_exit": 0,
+ "expect_contains": [
+  "abstract       1",
+  "results        4",
+  "conclusion     2"
+ ]
+}

@@ -1,0 +1,13 @@
+{
+ "kind": "must_change",
+ "gate": "hedge_budget",
+ "args": [
+  "--config",
+  "{dir}/paper.gates.json",
+  "--no-pdf"
+ ],
+ "expect_exit": 1,
+ "expect_contains": [
+  "位置：引言/相关工作出现防御句"
+ ]
+}
