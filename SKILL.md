@@ -1,11 +1,19 @@
 ---
 name: radar-tbd-paper-writing
-description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多目标数据关联方向的期刊论文写作方法。适用于：从代码仓库与实验结果起草论文、中文母稿写作与逐轮改稿、导师或审稿意见的落实、论文术语与行话治理、防御性表述治理、论文与代码一致性核查、中文母稿转英文投稿稿。当任务涉及"写论文/改稿/审稿/摘要引言重写/术语统一/行文不像期刊论文/读不下去/去 AI 味"时使用。默认目标期刊为 IET Radar Sonar & Navigation 一类的传统雷达工程期刊。
+description: 面向雷达检测前跟踪、群目标与编队跟踪、多目标数据关联论文的写作和复核。用于导师与作者意见落实、逻辑递进、术语与标点修订、中英翻译对齐、证据一致性及图表版面检查。冲突以最新且适用于当前范围的已采纳意见为准，历史写法仅作参考；项目适配与目标期刊要求优先，不替代科研协议、执行授权或作者验收。
+metadata:
+  last_updated: "2026-10-08"
 ---
 
 # 雷达 TBD 论文写作
 
 本方法来自一篇 IET RSN 投稿从"读不下去"到定稿的完整改稿周期（25 天、22 个渲染版本、三次被打回）。每条规则都有真实失败作依据，不是风格偏好。本文件是摘要层：规则的完整条款、配对条件与例外都在 references 里，动手前必读对应文件（§八）。
+
+## 零、项目适配与最新意见
+
+先读 [项目适配原则](references/00-project-adaptation.md)，以及使用项目已有的适配文件和当前决定。最新且适用于当前范围的已采纳意见优先于历史规则、示例和默认阈值。单段摘要、禁用某种标点、特定表格居中等要求只在对应稿件生效，不能推广成所有项目的硬规则。
+
+本 Skill 提供写作方法和工具诊断，不创建第二套项目任务或审批体系。`BLOCKED`、`TARGETED`、`REVIEW`、`FROZEN_OK`、`STAGE_OK` 仅表示所配置检查的结果，不授予改稿、实验、构建或发布权限，也不等于科学结论成立或作者验收。
 
 ## 一、先接受这个事实：缺陷分三层，且相互正交
 
@@ -21,7 +29,7 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 
 ## 二、你的语感不可信
 
-写了三个月的人，语感已经被项目内部词汇污染——**行话的定义就是写的人已经读不出它是行话**。判据必须锚在外部并机械执行：圈外同行一眼看不懂 → 黑话；目标期刊近年录用论文里不出现 → 黑话。手段是禁用词表 + 正名表 + `grep` 清零 + 退出码存证，不是"再读一遍改通顺"（[03-diction.md](references/03-diction.md)）。
+长期写作者容易习惯内部词汇。用同行反馈、相关文献和概念定义核查术语；检索不到或读者不懂是待审信号，不足以直接禁用正式定义的新概念。禁用词表与正名表采用当前作者已确认的版本，扫描后按语境判断，不能把历史冻结词恢复为当前标准（[03-diction.md](references/03-diction.md)）。
 
 ## 三、范文对标：贯穿全程的质量锚
 
@@ -31,42 +39,43 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 
 ## 四、工作流：第 0 层契约 + 四层 + 停止机制
 
-**第 0 层 · 契约。** 任何一轮改稿开始前三条契约就绪，否则 **BLOCKED**、禁止改稿：科学真实性契约（闭环表 + 生成宏 + 术语表冻结了什么绝对不能变）、编辑范围契约（这一轮允许碰哪些文本；结构轮之后段落边界冻结）、策略契约（为什么还要改、改哪个 unit、改到哪停）。见 [12-edit-contract.md](references/12-edit-contract.md)。
+**第 0 层 · 契约。** 核对科学真实性、编辑范围和修改目的：哪些事实受保护、允许修改哪些单元、如何判断问题已解决。沿用项目已有记录；信息不足时区分缺少工具输入与缺少任务授权，不因局部润色强制另建流程。见 [12-edit-contract.md](references/12-edit-contract.md)。
 
-**写稿循环。** 门禁从第 0 天起就用，不是等稿子写烂了再修：配置、闭环表、术语表、禁用词文件就位后跑 `--stage skeleton`；每写完一章跑 `--stage chapter`（只跑对已写章节有意义的门，全过判 `STAGE_OK`，可交样张）；全文首次编译后 `--stage freeze`，`FROZEN_OK` 才是冻结，冻结提交号写进 `base_rev`，账本从此开始。每张章节卡片的「动笔前（写作契约）」段是写该章前要读的清单。见 [16-drafting-loop.md](references/16-drafting-loop.md)。
+**写稿循环。** 在项目允许建立配置、闭环表与术语表后，可按 `--stage skeleton|chapter|freeze` 运行适用诊断。首次接入既有稿件先 report-only 校准；`STAGE_OK` 与 `FROZEN_OK` 不替代作者验收。每张章节卡片的动笔前清单按当前范围使用，历史默认值的覆盖见 [项目适配原则](references/00-project-adaptation.md)。见 [16-drafting-loop.md](references/16-drafting-loop.md)。
 
-**第 1 层 · 骨架。** 正文动笔前先落盘一份独立的大纲与逻辑链文件，含四件东西：全文核心问题（一句疑问句）；全文最短因果链（5–8 步，此后任何删改都必须仍能把链讲通）；逐节「本节要回答的问题」；主张—证据闭环表三列 `主张 | 证据挂接（图表与样本量）| 封口结论与边界`。执行规则：**挂不上因果链的内容不写入，旧稿现成段落也不迁移、不改写、直接弃用**——这替代的是"在旧稿上逐句润色"这个默认做法。见 [01-skeleton.md](references/01-skeleton.md)。
+**第 1 层 · 骨架。** 沿用已采纳的大纲，核对核心问题、最短因果链、逐节问题与主张—证据对应。区分最终任务目标与候选生成、评分等中间手段。逐段说明承接什么、推进什么、如何支持下一段；逻辑检查不自动授权删除旧段落。见 [01-skeleton.md](references/01-skeleton.md)。
 
 **第 2 层 · 结构。** 按章写，每章的固定写法在 [02-narrative.md](references/02-narrative.md)，写前清单在对应卡片的「动笔前」段：
 
 | 章 | 一句话要求 | 卡片 |
 |---|---|---|
-| 摘要 | 第一条实质结论是正面结果；做了基线比较就必须进摘要 | [abstract](cards/section-rules/abstract.md) |
-| 引言 | 第一句立研究对象；缺口句全文唯一且对应贡献第一条；方法名在缺口之后首现 | [introduction](cards/section-rules/introduction.md) |
+| 摘要 | 背景→问题→方法→原理→证据；段数按当前要求，比较对象可用已核实的集合称呼 | [abstract](cards/section-rules/abstract.md) |
+| 引言 | 从可理解的问题递进到缺口与贡献；开头及顺序服从已采纳大纲 | [introduction](cards/section-rules/introduction.md) |
 | 相关工作 | 按方法族、先复述机制再单一维度差异；只给适用性判据，禁二分贬低 | [related-work](cards/section-rules/related-work.md) |
-| 方法 | 每小节 动机句 → 对策 → 公式 → 算法框；实现细节移出、数值参数留下 | [method](cards/section-rules/method.md) |
-| 结果 | 汇总统计之前先走同种子证据链；段首先现象后图号；每图 2–3 句现象 + 机制 | [results](cards/section-rules/results.md) |
+| 方法 | 从理论起点连续推导，保留近似条件与中间式；算法框组织实施顺序 | [method](cards/section-rules/method.md) |
+| 结果 | 实例说明过程，统计支撑总体结论；图件取舍与顺序服从当前大纲 | [results](cards/section-rules/results.md) |
 | 讨论 / 结论 | 局限只说一次、正面在前；结论两段：成果段 → 边界段 | [discussion](cards/section-rules/discussion.md) / [conclusion](cards/section-rules/conclusion.md) |
 
 **第 3 层 · 词汇。** 结构定稿后单开一轮，只做措辞：禁用词表 + 正名表；新词三关（同义重复 / 一词双义 / 英文直译）；术语表四列 `冻结词 | 首选外文 | 使用语境 | 避免用法`，第四列是关键。清零验收必须双范围——`.tex` 源码和 `pdftotext -enc UTF-8` 抽取的渲染文本，图内标签在源码里 grep 不到。见 [03-diction.md](references/03-diction.md)。
 
-**第 4 层 · 验收。** 能机械化的都是门禁脚本，由 `scripts/run_gates.py` 按 `gates/gates.json` 统一执行；只输出 **BLOCKED / TARGETED / REVIEW / FROZEN_OK**（写稿阶段另有 STAGE_OK），没有可补偿的总分：
+**第 4 层 · 核查。** 能机械化的项目由 `scripts/run_gates.py` 按 `gates/gates.json` 诊断；输出 **BLOCKED / TARGETED / REVIEW / FROZEN_OK**（写稿阶段另有 STAGE_OK），没有可补偿的总分。硬/软描述脚本行为，适用性由项目配置与当前任务确定：
 
 | 层 | 检查什么 | 门禁 | 硬/软 |
 |---|---|---|---|
 | claim 纪律 | 闭环表逐条销账；**结果章比较了外部基线，摘要必须提** | `claim_ledger` | 硬 |
-| 叙事连贯 | 逐章复述因果链 + 范文量表自比 | —（人工） | — |
+| 叙事连贯 | 核对任务目标、逐段承接、前后节依赖与摘要原理过渡 | —（人工） | — |
 | 防御性表述 | 上限 / 位置白名单 / 同边界 ≤ 2 / **下限：结果与结论各 ≥ 1 句适用范围** | `hedge_budget` | 硬 |
 | 词汇 | 禁用词双范围清零（命中数 = 已人工判定豁免数）；术语表避免用法零命中；同一概念一个词形 | `jargon_scan`、`term_variants` | 硬 |
 | 排版 | 页级渲染目检；半空页机器抓；图表按统一样式层生成并做独立图件 + 嵌入 PDF 双重目检（[17](references/17-figures-tables-and-visual-qa.md)） | `page_fill` + 目检 | 硬 |
-| 改动可信度 | 宏零变化；逐页 delta 残差 = 0（必要条件）；段落级账本归因 + 语义不变量（充分条件） | `macro_diff`、`page_delta`、`change_ledger`、`semantic_diff` | 硬，契约门失败即 BLOCKED |
+| 改动可信度 | 按阶段保护数值宏和语义不变量，解释获准结构修改与页面差异 | `macro_diff`、`page_delta`、`change_ledger`、`semantic_diff` | 启用后的脚本硬门，适用范围见项目适配 |
 | 表层自然度 | 模板句 / 连接词密度 / 名词链 / 节奏 / 结果段首；只出热区 | `style_audit` | **软**，永不失败 |
+| 标点与句法 | 分号仅用于必要并列，冒号不替代推理；区分正文与非散文，英文公式按整句检查 | —（人工，[10](references/10-chinese.md#十一标点承载的句法与逻辑)） | — |
 
 词汇层的口径不是「退出码必须为 0」：有算法框的中文稿伪代码体写英文，PDF 侧必然有命中，拿 0 当唯一门槛会逼你删掉核心概念名。新门进注册表前必须在两份真稿上校准：定稿不得被拦，草稿的已知缺陷必须拦住。
 
 **停止机制。** 改稿是一台默认停止的状态机（[14-routing-and-stop.md](references/14-routing-and-stop.md)）：同一 unit 同一维度最多 2 次；「可以进一步润色」不是理由；导师认可的段落进保护名单；软热区不覆盖硬门；FROZEN_OK 之后再改只能由导师意见或新事实触发。TARGETED 时每个 unit 只套一张卡片。
 
-**阶段依赖不可交换。** `骨架 → 锁模型 → 重建实验 → 重构结构与图表 → 翻译`。母稿逻辑与实验未过审，不得进入翻译或排版——本项目的原始错误就是在英文稿上逐句润色，而问题在中文逻辑层（[09-mechanics.md](references/09-mechanics.md) §十四）。
+**阶段按实际依赖推进。** 先解决影响后续写作的逻辑与证据问题，再处理对应翻译和版面。历史完整修订顺序见 [09-mechanics.md](references/09-mechanics.md) §十四；局部改稿不自动触发重建实验或全稿重写。
 
 ## 五、成对规则：防止单向执行
 
@@ -98,6 +107,7 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 
 | 文件 | 何时读 |
 |---|---|
+| [00-project-adaptation.md](references/00-project-adaptation.md) | 首次使用及升级：意见优先级、项目差异、工具适用性与兼容边界 |
 | [01-skeleton.md](references/01-skeleton.md) | 动笔前搭骨架、写大纲与逻辑链文件 |
 | [02-narrative.md](references/02-narrative.md) | 写或重写任一章节 |
 | [03-diction.md](references/03-diction.md) | 词汇轮、术语统一、去行话、去 AI 味、禁用词模板三节说明 |
@@ -115,6 +125,7 @@ description: 面向雷达检测前跟踪（TBD）、群目标/编队跟踪、多
 | [15-regression-corpus.md](references/15-regression-corpus.md) | 改门禁脚本或阈值前：用例 schema、真实失败→用例流程、历史语料、**全部门禁的校准记录**、A/B 六指标 |
 | [16-drafting-loop.md](references/16-drafting-loop.md) | **动笔前与逐章写作**：第 0 天配置、三阶段、从写稿切到改稿的时点 |
 | [17-figures-tables-and-visual-qa.md](references/17-figures-tables-and-visual-qa.md) | 画图、做表、改图：尺寸由模板定、一个样式层、语义映射、按图类规范、导出与字体、双重目检、图尺寸变化后的浮动复查 |
+| [18-author-review-and-revision.md](references/18-author-review-and-revision.md) | 后续意见落实、作者核对、删图与公式合并后的联动检查 |
 
 ## 九、scripts
 

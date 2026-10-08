@@ -1,8 +1,18 @@
 # radar-tbd-paper-writing
 
-一个 Claude Code / Claude Agent Skill：雷达检测前跟踪（TBD）、群目标与编队跟踪方向的**期刊论文写作方法**，中文母稿优先。现在带一套**可执行门禁、回归用例和停止机制**——它不只告诉 agent 该怎么写，还机械地判定「能不能冻结、该修哪里、什么时候停」。
+适用于 Claude Code 等支持 Skill 的代理：雷达检测前跟踪（TBD）、群目标与编队跟踪方向的**期刊论文写作与复核方法**，中文母稿优先。包含人工审核规则、可执行诊断及合成回归用例；工具结果不替代科研协议、执行授权或作者验收。
 
 沉淀自一篇 IET RSN 投稿从「读不下去」到定稿的完整改稿周期（25 天、22 个渲染版本、三次被打回），以及第二篇论文母稿的评审轮。每条规则和每个门禁都有真实失败作依据。
+
+## 2026-10-08 更新
+
+- 补齐全文与逐段逻辑递进、任务目标与中间手段区分、摘要的方法原理过渡。
+- 按语义检查分号、冒号及英文显示公式的句末标点，不做全文件机械替换。
+- 修正固定两段摘要、强制编号推导、删除论断却强留引用等旧要求，最新且适用的已采纳意见优先。
+- 补充中英关系对齐、结果版本追溯、指标操作定义、基线先验披露与图表版面复核。
+- 保持脚本接口、配置格式、退出码和默认阈值不变；新增规则由人工检查，适用性解释见 [项目适配原则](references/00-project-adaptation.md)。
+
+更新只分发通用方法，不包含项目私有批注、会话或实验材料。项目复制安装不会自动升级，已有适配文件应保留并与通用规则合并。
 
 ## 为什么需要它
 
@@ -25,14 +35,16 @@
 ## 安装
 
 ```bash
-git clone <this-repo> ~/.claude/skills/radar-tbd-paper-writing
+git clone https://github.com/janeblackcc-gif/radar-tbd-paper-writing.git ~/.claude/skills/radar-tbd-paper-writing
 ```
 
 依赖：Python 3.9+（无第三方包）；poppler 的 `pdftotext` / `pdfinfo` / `pdftoppm` 在 PATH 上。
 
+已有 Git 克隆先确认工作区干净，再用 `git pull --ff-only` 更新；有本地定制或项目复制副本时先比较差异，保留项目 profile、现行术语和授权边界，不整目录覆盖。具体写作从 [SKILL.md](SKILL.md) 进入。
+
 ## 用法：跑门禁
 
-在稿件目录放一份 `paper.gates.json`（格式见 `references/14-routing-and-stop.md` §七），然后：
+项目允许接入时，在稿件目录配置 `paper.gates.json`（格式见 `references/14-routing-and-stop.md` §七）。既有稿件首次使用先 report-only 校准，再决定哪些诊断适合当前阶段：
 
 ```bash
 python scripts/run_gates.py --config <稿件目录>/paper.gates.json --report gate_report.md
@@ -41,21 +53,22 @@ python scripts/run_gates.py --config <稿件目录>/paper.gates.json --stage ske
 python scripts/run_gates.py --config <稿件目录>/paper.gates.json --stage chapter    # 每写完一章：只对已写章节生效
 ```
 
-输出四态之一，没有可补偿的总分：
+输出以下工具诊断状态，没有可补偿的总分；它们不自动改写项目状态或授予执行权限：
 
 | 判定 | 含义 |
 |---|---|
-| `BLOCKED` | 契约门失败（宏漂移 / 改动未归因）或工具没跑成 → **禁止改稿** |
+| `BLOCKED` | 契约检查失败或工具未运行成功；核查具体原因、适用范围及当前项目要求 |
 | `TARGETED` | 硬门失败 → 按报告定点修，每 unit 一张 `cards/` 卡片，同维度 ≤ 2 次 |
 | `REVIEW` | 只剩待审项 / 软热区 / 硬门缺输入被跳过 → 人工判定，写豁免或改 |
-| `FROZEN_OK` | 全过 → **停**。再改只能由导师意见或新事实触发 |
-| `STAGE_OK` | 仅 `--stage skeleton\|chapter`：本阶段所选门全过 → 交该章样张、写下一章；**不是冻结** |
+| `FROZEN_OK` | 所配置检查通过，不代表作者验收或科学结论已确认 |
+| `STAGE_OK` | 仅 `--stage skeleton\|chapter`：本阶段所选检查通过，不代表全稿冻结 |
 
 ## 结构
 
 ```
 SKILL.md                     主线：四层缺陷 + 第 0 层契约 → 工作流 → 成对规则 → 反向护栏 → 停止机制
 references/
+  00-project-adaptation.md    意见优先级、工具适用性、项目定制及公开边界
   01-skeleton.md              骨架层：大纲与逻辑链文件、主张—证据闭环表
   02-narrative.md             结构层：逐章写法（含「基线比较必进摘要」硬规则）
   03-diction.md               词汇层：禁用词表、正名表、新词三关、定义桥、双范围清零
@@ -73,6 +86,7 @@ references/
   15-regression-corpus.md     用例 schema、真实失败→用例流程、第一篇历史语料、全部门禁校准记录、A/B 六指标
   16-drafting-loop.md         写稿循环：第 0 天配置、skeleton/chapter/freeze 三阶段、写稿切改稿的时点
   17-figures-tables-and-visual-qa.md  图表：尺寸由模板定、一个样式层、语义映射、按图类规范、导出、双重目检
+  18-author-review-and-revision.md  后续意见、作者核对、删图与公式合并后的联动检查
 gates/
   gates.json                  门禁注册表：id / 层 / 硬软 / 脚本 / 参数 / 失败即何态；阈值只在这里
 cards/

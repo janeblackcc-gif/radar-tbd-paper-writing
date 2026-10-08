@@ -5,7 +5,7 @@
 ## 先做两问（04-hedging §三）
 1. 删掉这句，读者会不会把结论外推到未验证的范围？
 2. 这个边界在全稿是否只在此处出现一次？
-两问都「是」→ 必留，写豁免（带标签）；否则进入下面的处理。
+两问都「是」→ 必须保留边界信息，适用时记豁免；当前授权允许语言改写时可换成更直接的表达，不能丢失含义。否则进入下面的处理。
 
 ## 允许改
 - 合并同一边界的重复陈述，保留主张处 1 次 + 结论呼应 1 次。
@@ -14,8 +14,8 @@
 - 闭环表：补证据钩子（图/表/区间/消融/协议）、样本量、封口句。
 
 ## 禁止改
-- 带豁免标签的句子（`statistical_boundary` `baseline_identity` `information_contract` `model_assumption` `evaluation_condition` `submission_compliance` `evaluator_disclosure` `pointwise_declaration`）。
-- 摘要里的边界句（摘要不计入额度）。
+- 豁免项所保护的事实与边界（沿用 `statistical_boundary`、`baseline_identity`、`information_contract`、`model_assumption`、`evaluation_condition`、`submission_compliance`、`evaluator_disclosure`、`pointwise_declaration` 标签）；获准语言改写可换句面，核查含义及适用豁免仍对应。
+- 摘要中必要的适用条件和主张范围；摘要不计入额度，但不因此禁止保持含义的改写或重复句合并。
 - 用删边界的方式凑上限——上限超了先找重复，不找唯一。
 
 ## 必保留
